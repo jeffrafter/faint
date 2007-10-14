@@ -32,7 +32,7 @@ import java.awt.image.BufferedImage;
  */
 public class Constants {
 	
-	public static final String RELEASE = "1.3";
+	public static final String RELEASE = "unknown";
 	
 	public static final int INITIAL_HORIZONTAL_DIVIDERLOCATION = 280;
 
