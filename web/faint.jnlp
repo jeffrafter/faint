@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="http://www.informatik.uni-oldenburg.de/~maltech/faint" >
+
+<information>
+<vendor>Malte Mathiszig, Uni Oldenburg</vendor>
+<title>faint - The Face Annotation Interface!</title>
+<homepage href="http://www.maltechweb.de" />
+<description></description>
+</information>
+
+<offline-allowed/>
+
+<security>
+<all-permissions/>
+</security>
+
+<resources>
+<j2se version="1.6+" />
+<jar href="faint.jar"/>
+</resources>
+
+<application-desc main-class="de.offis.faint.gui.StartupDialog" />
+
+</jnlp>

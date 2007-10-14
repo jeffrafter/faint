@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<project name="faint web start deployment" default="main" basedir=".">
+
+    <!-- uncomment the following lines if using ANT outside Eclipse -->
+    <!--
+        <property name="fjepPath" value="plugins/net.sf.fjep.fatjar_0.0.24/fatjar.jar"/>
+        <taskdef name="fatjar.build" classname="net.sf.fjep.anttask.FJBuildTask" classpath="${fjepPath}"/>
+        <typedef name="fatjar.manifest" classname="net.sf.fjep.anttask.FJManifestType" classpath="${fjepPath}"/>
+        <typedef name="fatjar.exclude" classname="net.sf.fjep.anttask.FJExcludeType" classpath="${fjepPath}"/>
+        <typedef name="fatjar.jarsource" classname="net.sf.fjep.anttask.FJJarSourceType" classpath="${fjepPath}"/>
+        <typedef name="fatjar.filesource" classname="net.sf.fjep.anttask.FJFileSourceType" classpath="${fjepPath}"/>
+    -->
+    <!-- uncomment the above lines to use ANT outside of Eclipse -->
+		
+    <target name="main">
+    	    	
+        <fatjar.build output="web/faint.jar">
+            <fatjar.manifest mainclass="de.offis.faint.gui.StartupDialog"/>
+            <fatjar.filesource path=".\bin" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\axis.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\axis-ant.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\commons-discovery-0.2.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\commons-logging-1.0.4.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\jakarta-log4j-1.2.8.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\jaxrpc.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\jl1.0.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\saaj.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\wsdl4j-1.5.1.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\apache-axis-1.4\mail.jar" relpath=""/>
+            <fatjar.jarsource file=".\lib\metadata-extractor-2.3.1\metadata-extractor-2.3.1.jar" relpath=""/>
+        </fatjar.build>
+    	
+    	
+<!-- uncomment this to sign the jar file -->
+<!--
+   <signjar jar="web/faint.jar" alias="alias" storepass="storepass"/>
+-->
+
+    </target>
+	
+</project>
