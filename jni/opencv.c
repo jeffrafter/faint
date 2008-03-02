@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <cv.h>
+#include <highgui.h>
 //#include <cvaux.h>
 //#include <cxcore.h>
 
@@ -35,6 +36,59 @@ CvHaarClassifierCascade *cascade;
 char* lastCascade;
 CvMemStorage* storage;
   	
+
+/**
+ * GetStringUTFChars() does not convert special characters
+ * like "ä" correctly. This working solution for jstring
+ * conversion is adapted from David Wendt / IBM.
+ * 
+ * http://www-128.ibm.com/developerworks/java/library/j-jninls/jninls.html
+ * 
+ */
+char* jstringToWindows( JNIEnv* env, jstring jstr )
+{
+  int length = (*env)->GetStringLength( env, jstr );
+  const jchar* jcstr = (*env)->GetStringChars( env, jstr, 0 );
+  char* rtn = (char*)malloc( length*2+1 );
+  int size = 0;
+  size = (int) WideCharToMultiByte( CP_ACP, 0, (LPCWSTR)jcstr, length, rtn,
+                           (length*2+1), NULL, NULL );
+  if( size <= 0 )
+    return NULL;
+  (*env)->ReleaseStringChars( env, jstr, jcstr );
+  rtn[size] = 0;
+  return rtn;
+}
+
+
+/**
+ *  Loads the HaarClassifierCascade.
+ */
+void loadCascade(){
+	
+    // invoke getCascade() method to resolve cascade file name
+    jmethodID jmid = (*env)->GetMethodID(env, class, "getCascade","()Ljava/lang/String;");
+    if (jmid == NULL) printf("Error: Method getCascade() not found!\n");
+    jstring filename = (jstring) (*env)->CallObjectMethod(env,caller,jmid);
+    
+    char* string = jstringToWindows(env, filename);
+    
+    if (cascade == NULL || strcmpi(string, lastCascade) != 0){
+    
+	    // init cascade    
+		cascade = (CvHaarClassifierCascade*)cvLoad(string, 0, 0, 0 );
+		if (cascade == NULL) printf("Error: Cascade == NULL!\n");
+		else {
+			printf(string);
+			printf(" loaded!.\n");
+		}
+		//cleanup and remember cascade name
+		if (lastCascade != NULL) free(lastCascade);
+		lastCascade = string;
+    }
+}
+
+
 /***
  * Performs face detection on a given file and returns an array of
  * regions as result.
@@ -50,7 +104,7 @@ JNIEXPORT jobjectArray JNICALL Java_de_offis_faint_detection_plugins_opencv_Open
   	
   	// load image
   	char* convertedFileName = jstringToWindows(env, fileName);
-    IplImage *img = cvLoadImage(convertedFileName, 1 );
+  	IplImage* img = (IplImage*) cvLoadImage(convertedFileName,1);
     free(convertedFileName);
  	int i = img->width;
   	//printf("%i",i);
@@ -104,57 +158,6 @@ JNIEXPORT jobjectArray JNICALL Java_de_offis_faint_detection_plugins_opencv_Open
   	// cvReleaseMemStorage(&storage);
   	
   	return result;
-}
-
-/**
- *  Loads the HaarClassifierCascade.
- */
-void loadCascade(){
-	
-    // invoke getCascade() method to resolve cascade file name
-    jmethodID jmid = (*env)->GetMethodID(env, class, "getCascade","()Ljava/lang/String;");
-    if (jmid == NULL) printf("Error: Method getCascade() not found!\n");
-    jstring filename = (jstring) (*env)->CallObjectMethod(env,caller,jmid);
-    
-    char* string = jstringToWindows(env, filename);
-    
-    if (cascade == NULL || strcmpi(string, lastCascade) != 0){
-    
-	    // init cascade    
-		cascade = (CvHaarClassifierCascade*)cvLoad(string, 0, 0, 0 );
-		if (cascade == NULL) printf("Error: Cascade == NULL!\n");
-		else {
-			printf(string);
-			printf(" loaded!.\n");
-		}
-		//cleanup and remember cascade name
-		if (lastCascade != NULL) free(lastCascade);
-		lastCascade = string;
-    }
-}
-
-
-/**
- * GetStringUTFChars() does not convert special characters
- * like "ä" correctly. This working solution for jstring
- * conversion is adapted from David Wendt / IBM.
- * 
- * http://www-128.ibm.com/developerworks/java/library/j-jninls/jninls.html
- * 
- */
-char* jstringToWindows( JNIEnv* env, jstring jstr )
-{
-  int length = (*env)->GetStringLength( env, jstr );
-  const jchar* jcstr = (*env)->GetStringChars( env, jstr, 0 );
-  char* rtn = (char*)malloc( length*2+1 );
-  int size = 0;
-  size = WideCharToMultiByte( CP_ACP, 0, (LPCWSTR)jcstr, length, rtn,
-                           (length*2+1), NULL, NULL );
-  if( size <= 0 )
-    return NULL;
-  (*env)->ReleaseStringChars( env, jstr, jcstr );
-  rtn[size] = 0;
-  return rtn;
 }
 
 

@@ -7,6 +7,7 @@ INCLUDES  	= -I"$(JAVAPATH)\include" \
               -I"$(OPENCVPATH)\cvaux\include" \
               -I"$(OPENCVPATH)\cxcore\include" \
               -I"$(OPENCVPATH)\cv\include" \
+              -I"$(OPENCVPATH)\otherlibs\highgui" \
               
 LIBS        = $(OPENCVPATH)\\lib\\cv.lib \
               $(OPENCVPATH)\\lib\\highgui.lib \
