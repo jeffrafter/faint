@@ -32,15 +32,28 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		return "bla bla bla";
 	}
 
-
 	public Region[] detectFaces(String file, int minScanWindowSize) {
+		
+		// TODO: specify default cascade located in jar file
+		try {
+			cascade = XMLParser.parseFromStream(new FileInputStream("C:\\testdata\\haarcascade_frontalface_default.xml"));
+			cascade.initHiddenCascade();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
 		BufferedImage image = MainController.getInstance().getBufferedImageCache().getImage(file);
 		
 		ArrayList<CvRect> result = haarDetectObjects(image, minScanWindowSize);
+
+		Region[] regions = new Region[result.size()];
 		
-		//TODO: Either convert result to Region[] or change signature of haarDetectObjects
+		for (int i = 0; i< regions.length; i++) {
+			CvRect r = result.get(i);
+			regions[i] = new Region(r.x + Math.round(r.width*0.5f), r.y + Math.round(r.height*0.5f), r.width, r.height, 0, file);
+		}
 		
-		return null;
+		return regions;
 	}
 	
 	private ArrayList<CvRect> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
@@ -98,17 +111,17 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 			int stageOffset = 0;
 			
 			int start_x = 0, start_y = 0;
-			int end_x = (int) Math.round((img.getWidth() - winSize.x) / ystep);			
-			int end_y = (int) Math.round((img.getHeight() - winSize.y) / ystep);
+			int end_x = (int) Math.round(((double)(img.getWidth() - winSize.x)) / ystep);			
+			int end_y = (int) Math.round(((double)(img.getHeight() - winSize.y)) / ystep);
 
 			setImagesForHaarClassifierCascade(cascade, sumIntegralImage, sumSQIntegralImage, null, factor);
 
 			cascade.hidCascade.setCount(splitStage);
+			
+			boolean[][] mask = new boolean[img.getHeight()][img.getWidth()];
 
 			for (int pass = 0; pass < nPass; pass++) {
 				
-				boolean[][] mask = new boolean[img.getHeight()][img.getWidth()];
-
 				for (int _iy = start_y; _iy < end_y; _iy++) {
 					int iy = (int) Math.round(_iy * ystep);
 					int _ix, _xstep = 1;
@@ -117,15 +130,18 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 					for (_ix = start_x; _ix < end_x; _ix += _xstep) {
 						int ix = (int) Math.round(_ix * ystep);
 
+						// first pass
 						if (pass == 0) {
-							int result;
+							int result=0;
 							_xstep = 2;
 
 							result = runHaarClassifierCascade(cascade, new Point(ix, iy), 0);
 							
+							
 							if (result > 0) {
-								if (pass < nPass - 1)
+								if (pass < nPass - 1) {
 									maskRow[ix] = true;
+								}
 								else {
 									CvRect rect = new CvRect(ix, iy, winSize.x, winSize.y);
 									resultRects.add(rect);
@@ -133,8 +149,11 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 							}
 							if (result < 0)
 								_xstep = 1;
-						} else if (maskRow[ix])
-						{
+						}
+						
+						// second pass
+						else if (maskRow[ix]) {
+							
 							int result = runHaarClassifierCascade(cascade, new Point(ix, iy), stageOffset);
 							
 							if (result > 0) {
@@ -146,10 +165,9 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 								maskRow[ix] = false;
 						}
 					}
-					
-					stageOffset = cascade.hidCascade.count;
-					cascade.hidCascade.setCount(cascade.getCount());
 				}
+				stageOffset = cascade.hidCascade.count;
+				cascade.hidCascade.setCount(cascade.getCount());
 			}
 		}
 		
@@ -199,20 +217,7 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		cascade.p2.setCoords(equ_rect.x, equ_rect.y + equ_rect.height);
 		cascade.p3.setCoords(equ_rect.x + equ_rect.width, equ_rect.y + equ_rect.height);
 
-//		cascade.pq0 = sqsum_elem_ptr(*sqsum, equ_rect.y, equ_rect.x);
-//		cascade.pq1 = sqsum_elem_ptr(*sqsum, equ_rect.y, equ_rect.x + equ_rect.width
-//		);
-//		cascade.pq2 = sqsum_elem_ptr(*sqsum, equ_rect.y + equ_rect.height, equ_rect.x
-//		);
-//		cascade.pq3 = sqsum_elem_ptr(*sqsum, equ_rect.y + equ_rect.height,
-//		equ_rect.x + equ_rect.width );
-
-		/*
-		 * init pointers in haar features according to real window size and
-		 * given image pointers
-		 */
 		{
-
 			for (int i = 0; i < _cascade.getCount(); i++ ) {
 
 				for (int j = 0; j < cascade.stageClassifiers[i].getCount(); j++ ) {
@@ -329,7 +334,6 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		    double mean, variance_norm_factor;
 		    CvHidHaarClassifierCascade cascade;
 
-
 		    cascade = _cascade.hidCascade;
 
 		    if( pt.x < 0 || pt.y < 0 ||
@@ -357,6 +361,7 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 
 		    if( cascade.isTree )
 		    {
+		    	
 //		        CvHidHaarStageClassifier ptr;
 //		        assert( start_stage == 0 );
 //
@@ -390,44 +395,43 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		    }
 		    else if( cascade.isStumpBased ) {
 		    	
-		        for(int i = startStage; i < cascade.count; i++ ) {
+		        for (int i = startStage; i < cascade.count; i++ ) {
 		        	
 		            double stage_sum = 0;
 
-		            if( cascade.stageClassifiers[i].twoRects ) {
+// TODO: check if speedup by usage of two_rects option is worth the extra code
+//		            
+//		            if( cascade.stageClassifiers[i].twoRects ) {
+//		            	
+//		                for (int j = 0; j < cascade.stageClassifiers[i].getCount(); j++ ) {
+//		                    CvHidHaarClassifier classifier = cascade.stageClassifiers[i].classifiers[j];
+//		                    CvHidHaarTreeNode node = classifier.node[0];
+//		                    double sum, t = node.threshold*variance_norm_factor, a, b;
+//
+//		                    sum = calcsum(cascade.sum, node.feature.rect[0], pt) * node.feature.rect[0].weight;
+//		                    sum += calcsum(cascade.sum, node.feature.rect[1],pt) * node.feature.rect[1].weight;
+//
+//		                    a = classifier.alpha[0];
+//		                    b = classifier.alpha[1];
+//		                    stage_sum += sum < t ? a : b;
+//		                }
+//		            }
+//		            else {
 		            	
 		                for (int j = 0; j < cascade.stageClassifiers[i].getCount(); j++ ) {
 		                    CvHidHaarClassifier classifier = cascade.stageClassifiers[i].classifiers[j];
 		                    CvHidHaarTreeNode node = classifier.node[0];
-		                    double sum, t = node.threshold*variance_norm_factor, a, b;
+		                    double sum=0, t = node.threshold*variance_norm_factor, a, b;
 
-		                    sum = calcsum(cascade.sum, node.feature.rect[0], pt) * node.feature.rect[0].weight;
-		                    sum += calcsum(cascade.sum, node.feature.rect[1],pt) * node.feature.rect[1].weight;
-
-		                    a = classifier.alpha[0];
-		                    b = classifier.alpha[1];
-		                    stage_sum += sum < t ? a : b;
-		                }
-		            }
-		            else {
-		            	
-		            	// I don't see much sense in the two_rects option. Should this really speed up things?
-		                for(int j = 0; j < cascade.stageClassifiers[i].getCount(); j++ ) {
-		                    CvHidHaarClassifier classifier = cascade.stageClassifiers[i].classifiers[j];
-		                    CvHidHaarTreeNode node = classifier.node[0];
-		                    double sum, t = node.threshold*variance_norm_factor, a, b;
-
-		                    sum = calcsum(cascade.sum, node.feature.rect[0],pt) * node.feature.rect[0].weight;
-		                    sum += calcsum(cascade.sum, node.feature.rect[1],pt) * node.feature.rect[1].weight;
-
-		                    if( node.feature.rect[2] != null)
-		                        sum += calcsum(cascade.sum, node.feature.rect[2],pt) * node.feature.rect[2].weight;
+		                    for (int k = 0; k < node.feature.rect.length; k++) {
+		                    	sum += calcsum(cascade.sum, node.feature.rect[k],pt) * node.feature.rect[k].weight;
+		                    }
 
 		                    a = classifier.alpha[0];
 		                    b = classifier.alpha[1];
 		                    stage_sum += sum < t ? a : b;
 		                }
-		            }
+//		            }
 
 		            if( stage_sum < cascade.stageClassifiers[i].threshold ) {
 		                return -i;
