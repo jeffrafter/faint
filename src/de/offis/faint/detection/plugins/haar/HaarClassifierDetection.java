@@ -43,7 +43,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 	}
 
 	public String getDescription() {
-		return "bla bla bla";
+		return "This plugin is still in development. Watch out for the final version!";
 	}
 	
 	/* (non-Javadoc)
@@ -137,6 +137,9 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 			Point winSize = new Point(Math.round(cascade.origWindowSize.x * factor),
 									  Math.round(cascade.origWindowSize.y * factor));
 			
+	       if( winSize.x < minScanWindowSize || winSize.y < minScanWindowSize )
+	    	   continue;
+			
 			int stageOffset = 0;
 			
 			int start_x = 0, start_y = 0;
@@ -200,7 +203,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 			}
 		}
 		
-		// TODO: group results
+		// TODO: group retrieved rectangles
 			
 		return resultRects;
 	}
@@ -376,10 +379,6 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		    
 		    mean = calcsum(cascade.sum, cascade.p0, cascade.p1, cascade.p2, cascade.p3, (int)pt.x, (int)pt.y) * cascade.invWindowArea;
 		    
-		    double sqp0 = cascade.sqsum[cascade.p0.y][cascade.p0.x];
-		    double sqp1 = cascade.sqsum[cascade.p1.y][cascade.p1.x];
-		    double sqp2 = cascade.sqsum[cascade.p2.y][cascade.p2.x];
-		    double sqp3 = cascade.sqsum[cascade.p3.y][cascade.p3.x];
 		    variance_norm_factor = calcsum(cascade.sqsum, cascade.p0, cascade.p1, cascade.p2, cascade.p3, (int)pt.x, (int)pt.y);
 		    variance_norm_factor = variance_norm_factor*cascade.invWindowArea - mean*mean;
 		    
