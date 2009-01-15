@@ -1,6 +1,7 @@
 package de.offis.faint.detection.plugins.haar;
 
 import java.awt.Dimension;
+import java.io.Serializable;
 
 /**
  * Port of C struct as found in cvhaar.h
@@ -23,8 +24,11 @@ import java.awt.Dimension;
  * @author maltech
  *
  */
-public	class CvHidHaarClassifierCascade {
-    int count;
+public	class CvHidHaarClassifierCascade implements Serializable {
+
+	private static final long serialVersionUID = 6879630426484113632L;
+	
+	int count;
 	boolean  isStumpBased;
     boolean  hasTiltedFeatures;
     boolean  isTree;

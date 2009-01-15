@@ -3,6 +3,8 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
+import java.io.Serializable;
+
 /**
  * Port of C struct as found in cxtypes.h
  * 
@@ -17,8 +19,9 @@ package de.offis.faint.detection.plugins.haar;
  * @author maltech
  *
  */
-public class CvRect {
+public class CvRect implements Serializable {
 		
+	private static final long serialVersionUID = 5532363430563838044L;
 	int x;
     int y;
     int width;

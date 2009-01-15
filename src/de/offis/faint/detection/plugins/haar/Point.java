@@ -1,7 +1,12 @@
 package de.offis.faint.detection.plugins.haar;
 
-public class Point {
+import java.io.Serializable;
+
+public class Point implements Serializable{
 	
+	private static final long serialVersionUID = -2680006514028921644L;
+
+
 	/**
 	 * @param round
 	 * @param round2

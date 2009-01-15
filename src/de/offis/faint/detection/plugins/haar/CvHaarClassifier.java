@@ -3,6 +3,8 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
+import java.io.Serializable;
+
 /**
  * Port of C struct as found in cvtypes.h
  * 
@@ -20,7 +22,9 @@ package de.offis.faint.detection.plugins.haar;
  * @author maltech
  *
  */
-public class CvHaarClassifier {
+public class CvHaarClassifier implements Serializable {
+	
+	private static final long serialVersionUID = 4737349422121411820L;
 	
 	CvHaarFeature[] haarFeatures;
 	float thresholds[];

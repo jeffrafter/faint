@@ -3,6 +3,8 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
+import java.io.Serializable;
+
 /**
  * Port of C struct as found in cvtypes.h
  * 
@@ -20,14 +22,17 @@ package de.offis.faint.detection.plugins.haar;
  * @author maltech
  *
  */
-public class CvHaarFeature {
+public class CvHaarFeature implements Serializable {
 	
+	private static final long serialVersionUID = -5770098279536388791L;
 	
 	boolean tilted;
 	Rect[] rects;
 }
 
-class Rect {
+class Rect implements Serializable {
+	
+	private static final long serialVersionUID = -7455465814808638015L;
 	
 	public Rect(int x, int y, int w, int h, float weight){
 		r = new CvRect(x,y,w,h);

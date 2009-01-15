@@ -3,6 +3,8 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
+import java.io.Serializable;
+
 
 /**
  * Port of C struct as found in cvhaar.h
@@ -20,9 +22,11 @@ package de.offis.faint.detection.plugins.haar;
  * 
  * @author maltech
  */
-class CvHidHaarFeature
+class CvHidHaarFeature implements Serializable
 {
 	
+	private static final long serialVersionUID = 6241676843153232764L;
+
 	/**
 	 * @param length
 	 */
@@ -33,7 +37,10 @@ class CvHidHaarFeature
 		}
 	}
 
-	class HidRect {
+	class HidRect implements Serializable {
+
+		private static final long serialVersionUID = 7963937018284581291L;
+		
 		Point p0 = new Point();
 		Point p1 = new Point();
 		Point p2 = new Point();

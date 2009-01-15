@@ -3,8 +3,17 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
-import java.awt.Dimension;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
+import de.offis.faint.interfaces.IModule;
 
 /**
  * Port of C struct as found in cvtypes.h
@@ -24,21 +33,23 @@ import java.awt.Dimension;
  * @author maltech
  *
  */
-public class CvHaarClassifierCascade {
+public class CvHaarClassifierCascade implements Serializable {
+	
+	private static final long serialVersionUID = -8433620897449686789L;
 	
 	Point origWindowSize;
 	Point realWindowSize;
 	
 	double scale;
 	CvHaarStageClassifier[] stageClassifiers;
-	CvHidHaarClassifierCascade hidCascade;
+	transient CvHidHaarClassifierCascade hidCascade;
 	
 	int getCount(){
 		return stageClassifiers.length;
 	}
 
 	
-	static final float icv_stage_threshold_bias = 0.0001f;
+	static final transient float icv_stage_threshold_bias = 0.0001f;
 	
 	/**
 	 * Derived from icvCreateHidHaarClassifierCascad() in cvhaar.cpp
@@ -97,4 +108,39 @@ public class CvHaarClassifierCascade {
 		}
 	}
 	
+	/**
+	 * Writes a compact binary cascade file to disk.
+	 * 
+	 * @param outputFile
+	 */
+	public void serialize(String fileName) {
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream(fileName);
+			ObjectOutputStream out = new ObjectOutputStream(fos);
+			out.writeObject(this);
+			out.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}				
+	}
+	
+	public static CvHaarClassifierCascade deserializeFromStream(InputStream in) {
+		
+		try {
+			ObjectInputStream oIn = new ObjectInputStream(in);
+			CvHaarClassifierCascade cascade = (CvHaarClassifierCascade)oIn.readObject();
+			in.close();
+			return cascade;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}		
+	}
+
+	public boolean hasHiddenCascade() {
+		return hidCascade != null;
+	}
 }

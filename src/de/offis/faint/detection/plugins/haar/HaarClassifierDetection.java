@@ -5,21 +5,35 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 import de.offis.faint.controller.MainController;
 import de.offis.faint.detection.plugins.haar.CvHidHaarFeature.HidRect;
 import de.offis.faint.interfaces.IDetectionPlugin;
+import de.offis.faint.interfaces.ISwingCustomizable;
 import de.offis.faint.model.Region;
 
-public class HaarClassifierDetection implements IDetectionPlugin {
+public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomizable {
+	
+	private static final long serialVersionUID = -6413328362450632598L;
 	
 	private float scaleFactor = 1.1f;
-	private CvHaarClassifierCascade cascade = null;
+	private CvHaarClassifierCascade cascade;
+	private String cascadeFile = BUILT_IN_CASCADES[0];
 	
+	static final String[] BUILT_IN_CASCADES = {
+		"haarcascade_frontalface_default.bin",
+//		"haarcascade_frontalface_alt.bin",
+//		"haarcascade_frontalface_alt_tree.bin",
+//		"haarcascade_frontalface_alt2.bin",
+//		"haarcascade_profileface.bin"
+	};
+	
+	private transient HaarClassifierSettingsPanel settingsPanel = null;
+
 	public String getName() {
 		return "HaarClassfier Detection (pure Java)";
 	}
@@ -31,17 +45,28 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 	public String getDescription() {
 		return "bla bla bla";
 	}
+	
+	/* (non-Javadoc)
+	 * @see de.offis.faint.interfaces.ISwingCustomizable#getSettingsPanel()
+	 */
+	public JPanel getSettingsPanel() {
+		if (settingsPanel == null)
+			settingsPanel = new HaarClassifierSettingsPanel(this);
+		return settingsPanel;
+	}
+	
+	public HaarClassifierDetection(){
+		cascade = CvHaarClassifierCascade.deserializeFromStream(getClass().getResourceAsStream(cascadeFile));
+		cascade.initHiddenCascade();
+	}
 
 	public Region[] detectFaces(String file, int minScanWindowSize) {
 		
-		// TODO: specify default cascade located in jar file
-		try {
-			cascade = XMLParser.parseFromStream(new FileInputStream("C:\\testdata\\haarcascade_frontalface_default.xml"));
-			cascade.initHiddenCascade();
-		} catch (Exception e){
-			e.printStackTrace();
+		// This is necessary for deserialized cascades
+		if (!cascade.hasHiddenCascade()) {
+			cascade.initHiddenCascade();			
 		}
-		
+				
 		BufferedImage image = MainController.getInstance().getBufferedImageCache().getImage(file);
 		
 		ArrayList<CvRect> result = haarDetectObjects(image, minScanWindowSize);
@@ -54,6 +79,10 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		}
 		
 		return regions;
+	}
+	
+	public String toString(){
+		return getName();
 	}
 	
 	private ArrayList<CvRect> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
@@ -481,7 +510,57 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 		         + sum[p3.y + yOffset][p3.x + xOffset] );
 	}
 
+	public String getCurrentCascadeFile() {
+		return cascadeFile;
+	}
+
+	/**
+	 * @return
+	 */
+	public double getScale() {
+		return scaleFactor;
+	}
+
+	/**
+	 * @param selectedCascade
+	 */
+	public void setCascade(String selection) {
 		
+		if (selection.equals(cascadeFile))
+			return;
+		
+		CvHaarClassifierCascade newCascade = null;
+
+		// try to load serialized cascade from jar file
+		for (String s :  BUILT_IN_CASCADES) {
+			if (s.equals(selection)) {
+				newCascade = CvHaarClassifierCascade.deserializeFromStream(getClass().getResourceAsStream(selection));
+				break;
+			}
+		}
+		
+		// try to load serialized cascade from external XML file
+		if (newCascade == null) try {
+			File xmlFile = new File(MainController.getInstance().getDataDir().getAbsoluteFile() + File.separator + HaarClassifierSettingsPanel.SUBFOLDER + File.separator + selection);
+			newCascade = XMLParser.parseFromStream(new FileInputStream(xmlFile));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}		
+		
+		if (newCascade!=null) {
+			cascadeFile = selection;
+			cascade = newCascade;
+		}
+	}
+
+	/**
+	 * @param floatValue
+	 */
+	public void setScale(float scaleFactor) {
+		this.scaleFactor = scaleFactor;
+	}
+
+	
 	/**
 	 * For testing and debugging
 	 * 
@@ -489,27 +568,15 @@ public class HaarClassifierDetection implements IDetectionPlugin {
 	 */
 	public static void main(String[] args) {
 		
-		HaarClassifierDetection pluginInstance = new HaarClassifierDetection();
-		
-		// load cascade from XML stream
 		try {
-			System.out.println("Loading cascade.");
-			pluginInstance.cascade = XMLParser.parseFromStream(new FileInputStream("C:\\testdata\\haarcascade_frontalface_default.xml"));
+			HaarClassifierDetection pluginInstance = new HaarClassifierDetection();
 			
-			// initialize hidden cascade
-			System.out.println("Preparing hidden cascade.");
-			pluginInstance.cascade.initHiddenCascade();
-		
-			// run detection
 			System.out.println("Loading image.");
 			BufferedImage image = ImageIO.read(new File("C:\\testdata\\2.png"));
+			
 			System.out.print("Running face detection... ");
 			System.out.println(pluginInstance.haarDetectObjects(image, 10).size() + " faces found.");
-			
-			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
