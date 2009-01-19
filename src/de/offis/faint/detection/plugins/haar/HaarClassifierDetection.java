@@ -1,20 +1,17 @@
 package de.offis.faint.detection.plugins.haar;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
-import javax.swing.JPanel;
-
 import de.offis.faint.controller.MainController;
 import de.offis.faint.detection.plugins.haar.CvHidHaarFeature.HidRect;
 import de.offis.faint.interfaces.IDetectionPlugin;
 import de.offis.faint.interfaces.ISwingCustomizable;
 import de.offis.faint.model.Region;
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
 
 public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomizable {
 	
@@ -91,24 +88,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		int sumIntegralImage[][] = new int[img.getHeight()+1][img.getWidth()+1];
 		long sumSQIntegralImage[][] = new long[img.getHeight()+1][img.getWidth()+1];
 
-		for (int y = 1; y <= img.getHeight(); y++) {
-
-			int rowSum = 0;
-			long rowSumSQ = 0;
-
-			for (int x = 1; x <= img.getWidth(); x++) {
-
-				//FIXME (but not really important right now): this seems not to work if original image file was 8 bit greyscale
-				Color c = new Color(img.getRGB(x-1, y-1));
-				int grey = (int) Math.round((c.getBlue() + c.getGreen() + c.getRed())/3.0);
-
-				rowSum += grey;
-				rowSumSQ += grey*grey;
-
-				sumIntegralImage[y][x] = sumIntegralImage[y-1][x] + rowSum;
-				sumSQIntegralImage[y][x] = sumSQIntegralImage[y-1][x] + rowSumSQ;
-			}
-		}
+        getIntegralImages(img, sumIntegralImage, sumSQIntegralImage);
 
 		// variables for detection process
 //	    CvRect scanROIRect = new CvRect(0,0,0,0);
@@ -209,7 +189,50 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
         return resultRects;
 	}
 
-	/**
+
+
+
+
+    /**
+     * Get the integral of the image. This is a performance optimisaiton that produces a matrix of sums of rectangles
+     * for use later in the recognition
+     *
+     * @param img                The source image
+     * @param sumIntegralImage   The sum matrix
+     * @param sumSQIntegralImage The square sum matrix
+     */
+    private void getIntegralImages(BufferedImage img, int[][] sumIntegralImage, long[][] sumSQIntegralImage) {
+        // the performance of this method was checked using GetIntegralImagesPerformance in the test source.
+        final int width = img.getWidth();
+        final int height = img.getHeight();
+        final int[] imgData = new int[width];
+        for (int y = 1; y <= height; y++) {
+
+            int rowSum = 0;
+            long rowSumSQ = 0;
+            img.getRGB(0, y - 1, width, 1, imgData, 0, width);
+
+            for (int x = 1; x <= width; x++) {
+                final int rgb = imgData[x - 1];
+
+                final int grey = (((rgb >> 16) & 0xFF) +
+                                  ((rgb >> 8) & 0xFF) +
+                                  (rgb & 0xFF)) / 3;
+
+                rowSum += grey;
+                rowSumSQ += grey * grey;
+
+                sumIntegralImage[y][x] = sumIntegralImage[y - 1][x] + rowSum;
+                sumSQIntegralImage[y][x] = sumSQIntegralImage[y - 1][x] + rowSumSQ;
+            }
+        }
+    }
+
+
+
+
+
+    /**
 	 * Equivalent to function as found in cvhaar.cpp
 	 * 
 	 * void cvSetImagesForHaarClassifierCascade(CvHaarClassifierCascade* _cascade,
