@@ -188,8 +188,19 @@ public class EigenfaceRecognition implements IRecognitionPlugin, ISwingCustomiza
 		}
 		return result;
 	}
-	
-	protected double getDistanceBetweenWeights(double[] weightA, double[] weightB){
+
+
+
+
+
+    /**
+     * Returns the average of the differences of all the values in the two given arrays.
+     *
+     * @param weightA The first array
+     * @param weightB The second array
+     * @return The average of the differences of the arrays.
+     */
+    protected double getDistanceBetweenWeights(double[] weightA, double[] weightB){
 		double result = 0;
 		for(int i = 0; i<weightA.length; i++){
 			result+= Math.abs(weightA[i] - weightB[i]);			

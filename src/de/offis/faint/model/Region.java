@@ -35,6 +35,12 @@ import javax.imageio.ImageIO;
 import de.offis.faint.controller.MainController;
 import de.offis.faint.global.Constants;
 
+/**
+ * A Region is a rectangle of a source image that is of interest to us. This can be something that has been identified
+ * as containing a face or other object that we have been trained to look for. A Region has the ability to create
+ * thumbnail images for the area it represents employing caching techniquest to reduce processing.
+ *
+ */
 public class Region implements Serializable{
 	
 	private static final long serialVersionUID = 4670842002974016100L;
@@ -76,7 +82,13 @@ public class Region implements Serializable{
 	
 	
 	//--------------- Cache Methods --------------------//
-	
+    /**
+     * Returns the image portion that this regeion represents scaled to the given size.
+     *
+     * @param width The target width
+     * @param height The target height
+     * @return A thumbnail of the image this region represents.
+     */
 	public BufferedImage toThumbnail(int width, int height){
 		
 		if (thumbnail == null) {
@@ -102,7 +114,7 @@ public class Region implements Serializable{
 				
 			}
 			
-			
+			// else get the thumbnail from a cache on disk
 			else{
 				
 				try {
@@ -115,17 +127,41 @@ public class Region implements Serializable{
 		}
 		return thumbnail;
 	}
-	
-	public BufferedImage toThumbnail(Dimension size) {
+
+
+
+
+
+    /**
+     * Returns the image portion that this regeion represents scaled to the given size.
+     *
+     * @param size The target size for the image
+     * @return A thumbnail of the image this region represents.
+     */
+    public BufferedImage toThumbnail(Dimension size) {
 		return this.toThumbnail(size.width, size.height);				
 	}
 
-	
+
+
+
+
+    /**
+     * Clear the cache of this thumbnaill.
+     */
 	public void clearThumbnail(){
 		this.thumbnail = null;
 	}
 
-	
+
+
+
+
+    /**
+     * Cache the thumbnail for this region image to disk in the MainController.getInstance().getDataDir() path.
+     *
+     * @throws IOException if something goes wrong writing to disk
+     */
 	public void cacheToDisk() throws IOException {
 
 		// find next free file name
@@ -133,7 +169,8 @@ public class Region implements Serializable{
 		File file = null;
 		String dir = MainController.getInstance().getDataDir().getPath();
 		String leadingZeros = "00000000";
-		do{
+        // fixme: this bit could use File.createTempFile()
+        do{
 			String fileName = "" + i++;
 			fileName = leadingZeros.substring(Math.min(fileName.length(), leadingZeros.length()-1))
 			           + fileName + "." + Constants.CACHED_IMAGE_TYPE;
@@ -152,8 +189,17 @@ public class Region implements Serializable{
 		
 //		System.out.println(file.getName());
 	}
-	
-	private void updateCache(){
+
+
+
+
+
+    /**
+     * Clears the cache of this region thumbnail from memory so that the next time it is requested it will need to be
+     * loaded/created again. This will attempt to cache to disk any existing thumbnail in memory overriting the
+     * thumbnail that may exist there already.
+     */
+    private void updateCache(){
 		if (cachedFile != null){
 			deleteCachedFile();
 			try {
@@ -164,8 +210,15 @@ public class Region implements Serializable{
 		}
 		this.thumbnail = null;
 	}
-	
-	public void deleteCachedFile(){
+
+
+
+
+
+    /**
+     * Deletes the cached thumbnail file for this region from disk.
+     */
+    public void deleteCachedFile(){
 		if (cachedFile!=null){
 			File file = new File(MainController.getInstance().getDataDir().getPath() + File.separator + cachedFile);
 			file.delete();

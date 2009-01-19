@@ -53,8 +53,19 @@ public class Utilities {
 		copy.getGraphics().drawImage(image.getScaledInstance(width, height, scaleMode),0,0,null);			
 		return copy;
 	}
-	
-	public static byte[] bufferedImageToIntensityArray(BufferedImage input){
+
+
+
+
+
+    /**
+     * Converts the given image into an array of length width * height containing the average of the RGB values for each
+     * pixel in the range 0 - 255 (the intensity).
+     *
+     * @param input The image to convert
+     * @return The array of intensity values
+     */
+    public static byte[] bufferedImageToIntensityArray(BufferedImage input){
 		byte[] result = new byte[input.getHeight() * input.getWidth()];
 		int counter = 0;
 		for (int h = 0; h < input.getHeight(); h++ ){	
@@ -70,8 +81,20 @@ public class Utilities {
 		}
 		return result;
 	}
-	
-	public static BufferedImage intensityArrayToBufferedImage(byte[] array, int w, int h){
+
+
+
+
+
+    /**
+     * Converts the given intensity array into a grayscale image of w x h dimensions.
+     *
+     * @param array The array to convert
+     * @param w the width of the resulting image
+     * @param h The height of the resulting image
+     * @return The grayscale image that the intensity values represent
+     */
+    public static BufferedImage intensityArrayToBufferedImage(byte[] array, int w, int h){
 		ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
         int[] nBits = {8};
         ColorModel cm = new ComponentColorModel(cs, nBits, false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
@@ -81,8 +104,19 @@ public class Utilities {
         BufferedImage bm = new BufferedImage(cm, raster, false, null);
 		return bm;
 	}
-	
-	public static byte[] spreadGreyValues(double[] values){
+
+
+
+
+
+    /**
+     * Normalise the given values over the set of all given values. This will apply the equation
+     * {@code newVal = (oldVal - min) * 255 / (max - min)}.
+     *
+     * @param values The values to normalise
+     * @return The normalised values
+     */
+    public static byte[] spreadGreyValues(double[] values){
 		Double temp[] = new Double[values.length];
 		for (int i = 0; i < values.length; i++){
 			temp[i] = values[i];
@@ -112,21 +146,53 @@ public class Utilities {
 		
 		return result;		
 	}
-	
-	public static void showImageInFrame(Image image, String title){
+
+
+
+
+
+    /**
+     * Show the given image in a JFrame with the given title. Useful for debugging
+     *
+     * @param image The image to show
+     * @param title The title of the frame
+     */
+    public static void showImageInFrame(Image image, String title){
 		JFrame f = new JFrame(title);
 		f.add(new JLabel(new ImageIcon(image)));
 		f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		f.pack();
 		f.setVisible(true);		
 	}
-	
-	public static String integerToString (Integer number){
+
+
+
+
+
+    /**
+     * Converts the given Integer to a string, if null "?" is returned.
+     *
+     * @param number The number to convert
+     * @return The String representation of the number or "?"
+     */
+    public static String integerToString (Integer number){
 		if (number == null) return "?";
 		else return number.toString();		
 	}
-	
-	public static String inputStreamToString(InputStream is) throws IOException{
+
+
+
+
+
+    /**
+     * Reads the whole InputStream and converts it into a string. This does not do any character conversion. This will
+     * not close the stream
+     *
+     * @param is The input stream to read
+     * @return The string contents of the stream.
+     * @throws IOException if there was an error reading from the stream.
+     */
+    public static String inputStreamToString(InputStream is) throws IOException{
 		StringBuffer out = new StringBuffer();
 		byte[] b = new byte[4096];	
 		for (int n; (n = is.read(b)) != -1;) {
@@ -134,8 +200,19 @@ public class Utilities {
 		}
 		return out.toString();
 	}
-	
-	public static void saveFileFromURL(URL url, File destinationFile) throws IOException{
+
+
+
+
+
+    /**
+     * Writes the contents of the entry at the given url to the given file.
+     *
+     * @param url The url to get
+     * @param destinationFile The file to write to
+     * @throws IOException if something goes wrong
+     */
+    public static void saveFileFromURL(URL url, File destinationFile) throws IOException{
 		FileOutputStream fo = new FileOutputStream(destinationFile);
 		InputStream is = url.openStream();
 		
@@ -151,15 +228,24 @@ public class Utilities {
 	}
 
 	/**
-	 * @param averageFace
-	 * @param face_thumbnail_size
-	 * @return
+     * Convert the given intensity array to a buffered image of {@code size} dimensions.
+     *
+	 * @param averageFace The intensity of the pixels
+	 * @param face_thumbnail_size The size of the image.
+	 * @return The image.
 	 */
 	public static BufferedImage intensityArrayToBufferedImage(byte[] averageFace, Dimension size) {
 		return intensityArrayToBufferedImage(averageFace, size.width, size.height);
 	}
-	
-	public static class FileTypeFilter implements FilenameFilter, Serializable{
+
+
+
+
+
+    /**
+     * Filters files based ont he filename extension.
+     */
+    public static class FileTypeFilter implements FilenameFilter, Serializable{
 		
 		private static final long serialVersionUID = -4726057606270522957L;
 		
@@ -179,12 +265,29 @@ public class Utilities {
 			return false;
 		}
 	}
-	
-	public static String getClassName(Class theClass){
-		return theClass.toString().substring(theClass.toString().lastIndexOf('.')+1);		
+
+
+
+
+
+    /**
+     * Acts the same as theClass.getSimpleName()
+     *
+     * @param theClass The class to get the simple name for
+     * @return The class name.
+     */
+    public static String getClassName(Class theClass){
+		return theClass.toString().substring(theClass.toString().lastIndexOf('.')+1);
 	}
-	
-	public static class FolderFilter extends javax.swing.filechooser.FileFilter{
+
+
+
+
+
+    /**
+     * Filter to only show directories
+     */
+    public static class FolderFilter extends javax.swing.filechooser.FileFilter{
 
 		/* (non-Javadoc)
 		 * @see java.io.FileFilter#accept(java.io.File)
@@ -202,8 +305,11 @@ public class Utilities {
 			return "Folders";
 		}
 	}
-	
-	public static class SortableContainer<K> implements Comparable{
+
+    /**
+     * Wraps a generic Object instance in a Comparable that takes a numeric order variable.
+     */
+    public static class SortableContainer<K> implements Comparable{
 		
 		private K object; 
 		private Comparable number;

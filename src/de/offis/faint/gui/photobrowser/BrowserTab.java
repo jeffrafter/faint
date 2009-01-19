@@ -31,7 +31,7 @@ import javax.swing.border.EmptyBorder;
 
 import de.offis.faint.global.Constants;
 import de.offis.faint.gui.MainFrame;
-;
+
 
 /**
  * @author maltech
