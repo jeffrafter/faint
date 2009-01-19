@@ -67,7 +67,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 			cascade.initHiddenCascade();			
 		}
 				
-		BufferedImage image = MainController.getInstance().getBufferedImageCache().getImage(file);
+		BufferedImage image = MainController.getInstance().getBufferedImageCache().getImage(new File(file));
 		
 		ArrayList<CvRect> result = haarDetectObjects(image, minScanWindowSize);
 
@@ -85,31 +85,31 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		return getName();
 	}
 	
-	private ArrayList<CvRect> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
+	ArrayList<CvRect> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
 				
 		// calculate integral image and square integral image from grey values
 		int sumIntegralImage[][] = new int[img.getHeight()+1][img.getWidth()+1];
 		long sumSQIntegralImage[][] = new long[img.getHeight()+1][img.getWidth()+1];
 
 		for (int y = 1; y <= img.getHeight(); y++) {
-			
+
 			int rowSum = 0;
 			long rowSumSQ = 0;
-			
+
 			for (int x = 1; x <= img.getWidth(); x++) {
 
 				//FIXME (but not really important right now): this seems not to work if original image file was 8 bit greyscale
-				Color c = new Color(img.getRGB(x-1, y-1)); 
+				Color c = new Color(img.getRGB(x-1, y-1));
 				int grey = (int) Math.round((c.getBlue() + c.getGreen() + c.getRed())/3.0);
-				
+
 				rowSum += grey;
 				rowSumSQ += grey*grey;
-				
+
 				sumIntegralImage[y][x] = sumIntegralImage[y-1][x] + rowSum;
 				sumSQIntegralImage[y][x] = sumSQIntegralImage[y-1][x] + rowSumSQ;
 			}
 		}
-		
+
 		// variables for detection process
 //	    CvRect scanROIRect = new CvRect(0,0,0,0);
 	    boolean isFound = false;
@@ -202,10 +202,11 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 				cascade.hidCascade.setCount(cascade.getCount());
 			}
 		}
-		
-		// TODO: group retrieved rectangles
-			
-		return resultRects;
+
+        // group the rectangles
+        resultRects = Groups.reduceAreas(resultRects);
+
+        return resultRects;
 	}
 
 	/**
@@ -572,7 +573,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 			
 			System.out.println("Loading image.");
 			BufferedImage image = ImageIO.read(new File("C:\\testdata\\2.png"));
-			
+
 			System.out.print("Running face detection... ");
 			System.out.println(pluginInstance.haarDetectObjects(image, 10).size() + " faces found.");
 		} catch (Exception e) {
