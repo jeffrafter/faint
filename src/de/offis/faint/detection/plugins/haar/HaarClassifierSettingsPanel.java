@@ -26,22 +26,13 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
-
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import com.sun.org.apache.bcel.internal.generic.NEWARRAY;
-
 import de.offis.faint.controller.MainController;
 import de.offis.faint.global.Utilities.FileTypeFilter;
 import de.offis.faint.gui.tools.NiceJPanel;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * @author maltech
@@ -54,7 +45,9 @@ public class HaarClassifierSettingsPanel extends JPanel{
 	private HaarClassifierDetection model;
 	private JComboBox cascadeMenu = new JComboBox();
 	private JSpinner scaleFactor = new JSpinner();
-	private final String[] CASCADE_SUFFIXES = {".xml",".XML"};
+    private JSpinner minimumGroupMembers = new JSpinner();
+    private JCheckBox showAllMatches = new JCheckBox("Show all matches");
+    private final String[] CASCADE_SUFFIXES = {".xml",".XML"};
 	protected static final String SUBFOLDER = "opencv";
 	
 	private FileTypeFilter cascadeFilenameFilter = new FileTypeFilter(CASCADE_SUFFIXES);
@@ -76,8 +69,16 @@ public class HaarClassifierSettingsPanel extends JPanel{
 		scaleFactorPanel.add(scaleFactor, BorderLayout.CENTER);
 		scaleFactor.addChangeListener(listener);
 		rows.addRow(scaleFactorPanel);
-		
-		this.add(rows, BorderLayout.NORTH);
+
+        JPanel minimumGroupMembersPanel = new JPanel(new BorderLayout());
+        minimumGroupMembersPanel.setBorder(new TitledBorder("Miminum Matches per Group"));
+        minimumGroupMembersPanel.add(minimumGroupMembers, BorderLayout.CENTER);
+        minimumGroupMembers.addChangeListener(listener);
+        minimumGroupMembersPanel.add(showAllMatches, BorderLayout.SOUTH);
+        showAllMatches.addActionListener(listener);
+        rows.addRow(minimumGroupMembersPanel);
+
+        this.add(rows, BorderLayout.NORTH);
 		this.model = model;
 		
 		updateFromModel();
@@ -104,7 +105,17 @@ public class HaarClassifierSettingsPanel extends JPanel{
 		}
 		
 		scaleFactor.setModel(new SpinnerNumberModel(model.getScale(),1.04,2,0.05));
-	}
+
+        if (model.getGroupingPolicy().getMinimumGroupSize() == GroupingPolicy.ALL) {
+            showAllMatches.setSelected(true);
+            minimumGroupMembers.setValue(3);
+            minimumGroupMembers.setEnabled(false);
+        } else {
+            showAllMatches.setSelected(false);
+            minimumGroupMembers.setValue(model.getGroupingPolicy().getMinimumGroupSize());
+            minimumGroupMembers.setEnabled(true);
+        }
+    }
 	
 	private class EventListener implements ActionListener, ChangeListener{
 
@@ -116,7 +127,15 @@ public class HaarClassifierSettingsPanel extends JPanel{
 			if (e.getSource()==cascadeMenu){
 				String selectedCascade = (String) cascadeMenu.getSelectedItem();
 				if (selectedCascade!= null) model.setCascade(selectedCascade);
-			}
+			} else if (e.getSource() == showAllMatches) {
+                if (!showAllMatches.isSelected()) {
+                    minimumGroupMembers.setEnabled(true);
+                    model.getGroupingPolicy().setMinimumGroupSize((Integer) minimumGroupMembers.getValue());
+                } else {
+                    minimumGroupMembers.setEnabled(false);
+                    model.getGroupingPolicy().setMinimumGroupSize(GroupingPolicy.ALL);
+                }
+            }
 		}
 
 		/* (non-Javadoc)
@@ -126,7 +145,9 @@ public class HaarClassifierSettingsPanel extends JPanel{
 
 			if (e.getSource()==scaleFactor){
 				model.setScale(((SpinnerNumberModel) scaleFactor.getModel()).getNumber().floatValue());				
-			}			
+			} else if (e.getSource() == minimumGroupMembers) {
+                model.getGroupingPolicy().setMinimumGroupSize((Integer) minimumGroupMembers.getValue());
+            }
 		}
 	}
 }

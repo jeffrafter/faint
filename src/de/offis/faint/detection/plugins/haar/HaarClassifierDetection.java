@@ -30,8 +30,9 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 //		"haarcascade_frontalface_alt2.bin",
 //		"haarcascade_profileface.bin"
 	};
-	
-	private transient HaarClassifierSettingsPanel settingsPanel = null;
+
+    private GroupingPolicy groupingPolicy;
+    private transient HaarClassifierSettingsPanel settingsPanel = null;
 
 	public String getName() {
 		return "HaarClassfier Detection (pure Java)";
@@ -57,9 +58,19 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 	public HaarClassifierDetection(){
 		cascade = CvHaarClassifierCascade.deserializeFromStream(getClass().getResourceAsStream(cascadeFile));
 		cascade.initHiddenCascade();
-	}
 
-	public Region[] detectFaces(String file, int minScanWindowSize) {
+        groupingPolicy = new GroupingPolicy();
+    }
+
+    public GroupingPolicy getGroupingPolicy() {
+        return groupingPolicy;
+    }
+
+    public void setGroupingPolicy(GroupingPolicy groupingPolicy) {
+        this.groupingPolicy = groupingPolicy;
+    }
+
+    public Region[] detectFaces(String file, int minScanWindowSize) {
 		
 		// This is necessary for deserialized cascades
 		if (!cascade.hasHiddenCascade()) {
@@ -185,7 +196,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		}
 
         // group the rectangles
-        resultRects = Groups.reduceAreas(resultRects);
+        resultRects = groupingPolicy.reduceAreas(resultRects);
 
         return resultRects;
 	}
