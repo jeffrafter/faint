@@ -2,6 +2,7 @@ package de.offis.faint.detection.plugins.haar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Rectangle;
 
 /**
  * Group a number of rectangles into fewer instances that share mostly the same areas.
@@ -11,7 +12,7 @@ import java.util.List;
 public class Groups {
 
 
-    private static boolean isNeighbour(CvRect r1, CvRect r2) {
+    private static boolean isNeighbour(Rectangle r1, Rectangle r2) {
         // based on the 20% factor in opencv
         int distance = Math.round(r1.width * 0.2f);
         return r2.x <= r1.x + distance &&
@@ -34,7 +35,7 @@ public class Groups {
      * @param areas The areas to combine
      * @return the grouped areas.
      */
-    public static ArrayList<CvRect> reduceAreas(List<CvRect> areas) {
+    public static ArrayList<Rectangle> reduceAreas(List<Rectangle> areas) {
         List<Integer> groupIds = new ArrayList<Integer>(areas.size());
 
         // merge the rectangles into classification groups
@@ -48,7 +49,7 @@ public class Groups {
 
         for (int i = 0; i < groupIds.size(); i++) {
             int groupId = groupIds.get(i);
-            CvRect a = areas.get(i);
+            Rectangle a = areas.get(i);
             Group group = groups.get(groupId);
 
             group.neighbours++;
@@ -58,11 +59,11 @@ public class Groups {
             group.area.height += a.height;
         }
 
-        ArrayList<CvRect> results = new ArrayList<CvRect>(groupCount);
+        ArrayList<Rectangle> results = new ArrayList<Rectangle>(groupCount);
 
         for (Group group : groups) {
             if (group.neighbours > 3) { // the min number of rectangles to form a group
-                CvRect r = group.area;
+                Rectangle r = group.area;
                 r.x /= group.neighbours;
                 r.y /= group.neighbours;
                 r.width /= group.neighbours;
@@ -85,24 +86,24 @@ public class Groups {
      * @param result The resultant classification ids
      * @return The number of classes
      */
-    public static int merge(List<CvRect> areas, List<Integer> result) {
+    public static int merge(List<Rectangle> areas, List<Integer> result) {
         if (result == null) {
             throw new IllegalArgumentException("result cannot be null");
         }
 
-        List<Node<CvRect>> trees = new ArrayList<Node<CvRect>>(areas.size());
-        for (CvRect area : areas) {
-            Node<CvRect> node = new Node<CvRect>();
+        List<Node<Rectangle>> trees = new ArrayList<Node<Rectangle>>(areas.size());
+        for (Rectangle area : areas) {
+            Node<Rectangle> node = new Node<Rectangle>();
             node.userData = area;
             trees.add(node);
         }
 
-        for (Node<CvRect> tree : trees) {
-            Node<CvRect> root = tree.getRoot();
+        for (Node<Rectangle> tree : trees) {
+            Node<Rectangle> root = tree.getRoot();
 
-            for (Node<CvRect> tree2 : trees) {
+            for (Node<Rectangle> tree2 : trees) {
                 if (isNeighbour(tree.userData, tree2.userData)) {
-                    Node<CvRect> root2 = tree2.getRoot();
+                    Node<Rectangle> root2 = tree2.getRoot();
                     if (root2 != root) {
                         // assign the smaller tree to the root of the larger tree (based on rank)
                         if (root.rank > root2.rank) {
@@ -119,7 +120,7 @@ public class Groups {
                         // flatten the tree, this sets each tree to have a depth of 1
                         // Compress path from node2 to the root:
                         while (tree2.parent != null) {
-                            Node<CvRect> temp = tree2;
+                            Node<Rectangle> temp = tree2;
                             tree2 = tree2.parent;
                             temp.parent = root;
                         }
@@ -127,7 +128,7 @@ public class Groups {
                         // Compress path from node to the root:
                         tree2 = tree;
                         while (tree2.parent != null) {
-                            Node<CvRect> temp = tree2;
+                            Node<Rectangle> temp = tree2;
                             tree2 = tree2.parent;
                             temp.parent = root;
                         }
@@ -137,7 +138,7 @@ public class Groups {
         }
 
         int classIndex = 0;
-        for (Node<CvRect> tree : trees) {
+        for (Node<Rectangle> tree : trees) {
             int index = -1;
             tree = tree.getRoot();
             if (tree.rank >= 0) {
@@ -180,7 +181,7 @@ public class Groups {
     private static class Group {
 
         private int neighbours = 0;
-        private CvRect area = new CvRect();
+        private Rectangle area = new Rectangle();
     }
 }
 

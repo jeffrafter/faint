@@ -3,8 +3,6 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,8 +10,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-
-import de.offis.faint.interfaces.IModule;
+import java.awt.Point;
 
 /**
  * Port of C struct as found in cvtypes.h

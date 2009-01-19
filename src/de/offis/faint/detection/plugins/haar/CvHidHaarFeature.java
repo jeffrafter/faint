@@ -4,6 +4,7 @@
 package de.offis.faint.detection.plugins.haar;
 
 import java.io.Serializable;
+import java.awt.Point;
 
 
 /**
@@ -42,9 +43,9 @@ class CvHidHaarFeature implements Serializable
 		private static final long serialVersionUID = 7963937018284581291L;
 		
 		Point p0 = new Point();
-		Point p1 = new Point();
-		Point p2 = new Point();
-		Point p3 = new Point();
+        Point p1 = new Point();
+        Point p2 = new Point();
+        Point p3 = new Point();
         float weight;		
 	}
 	

@@ -4,6 +4,7 @@
 package de.offis.faint.detection.plugins.haar;
 
 import java.io.Serializable;
+import java.awt.Rectangle;
 
 /**
  * Port of C struct as found in cvtypes.h
@@ -35,10 +36,10 @@ class Rect implements Serializable {
 	private static final long serialVersionUID = -7455465814808638015L;
 	
 	public Rect(int x, int y, int w, int h, float weight){
-		r = new CvRect(x,y,w,h);
+        r = new Rectangle(x, y, w, h);
 		this.weight = weight;
 	}
 	
-	CvRect r;
+	Rectangle r;
 	float weight;		
 }

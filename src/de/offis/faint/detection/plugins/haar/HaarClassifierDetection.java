@@ -1,6 +1,8 @@
 package de.offis.faint.detection.plugins.haar;
 
 import java.awt.image.BufferedImage;
+import java.awt.Rectangle;
+import java.awt.Point;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -66,12 +68,12 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 				
 		BufferedImage image = MainController.getInstance().getBufferedImageCache().getImage(new File(file));
 		
-		ArrayList<CvRect> result = haarDetectObjects(image, minScanWindowSize);
+		ArrayList<Rectangle> result = haarDetectObjects(image, minScanWindowSize);
 
 		Region[] regions = new Region[result.size()];
 		
 		for (int i = 0; i< regions.length; i++) {
-			CvRect r = result.get(i);
+			Rectangle r = result.get(i);
 			regions[i] = new Region(r.x + Math.round(r.width*0.5f), r.y + Math.round(r.height*0.5f), r.width, r.height, 0, file);
 		}
 		
@@ -82,7 +84,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		return getName();
 	}
 	
-	ArrayList<CvRect> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
+	ArrayList<Rectangle> haarDetectObjects(BufferedImage img, int minScanWindowSize) {
 				
 		// calculate integral image and square integral image from grey values
 		int sumIntegralImage[][] = new int[img.getHeight()+1][img.getWidth()+1];
@@ -91,7 +93,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
         getIntegralImages(img, sumIntegralImage, sumSQIntegralImage);
 
 		// variables for detection process
-//	    CvRect scanROIRect = new CvRect(0,0,0,0);
+//	    Rectangle scanROIRect = new Rectangle(0,0,0,0);
 	    boolean isFound = false;
 
 	    int splitStage = 2;
@@ -110,12 +112,11 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
         }
         
         // main detection loop
-        ArrayList<CvRect> resultRects = new ArrayList<CvRect>();
+        ArrayList<Rectangle> resultRects = new ArrayList<Rectangle>();
 		for (float factor = 1; nFactors-- > 0 && !isFound; factor *= scaleFactor) {
 			double ystep = Math.max(2, factor);
-			
-			Point winSize = new Point(Math.round(cascade.origWindowSize.x * factor),
-									  Math.round(cascade.origWindowSize.y * factor));
+
+            Point winSize = new Point(Math.round(cascade.origWindowSize.x * factor), Math.round(cascade.origWindowSize.y * factor));
 			
 	       if( winSize.x < minScanWindowSize || winSize.y < minScanWindowSize )
 	    	   continue;
@@ -147,7 +148,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 							int result=0;
 							_xstep = 2;
 
-							result = runHaarClassifierCascade(cascade, new Point(ix, iy), 0);
+                            result = runHaarClassifierCascade(cascade, new Point(ix, iy), 0);
 							
 							
 							if (result > 0) {
@@ -155,7 +156,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 									maskRow[ix] = true;
 								}
 								else {
-									CvRect rect = new CvRect(ix, iy, winSize.x, winSize.y);
+                                    Rectangle rect = new Rectangle(ix, iy, winSize.x, winSize.y);
 									resultRects.add(rect);
 								}
 							}
@@ -165,12 +166,12 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 						
 						// second pass
 						else if (maskRow[ix]) {
-							
-							int result = runHaarClassifierCascade(cascade, new Point(ix, iy), stageOffset);
+
+                            int result = runHaarClassifierCascade(cascade, new Point(ix, iy), stageOffset);
 							
 							if (result > 0) {
 								if (pass == nPass - 1) {
-									CvRect rect = new CvRect(ix, iy, winSize.x, winSize.y);
+                                    Rectangle rect = new Rectangle(ix, iy, winSize.x, winSize.y);
 									resultRects.add(rect);
 								}
 							} else
@@ -250,7 +251,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 			int[][] tiltedIntegralImage, double scale) {
 
 //		int coi0 = 0, coi1 = 0;
-		CvRect equ_rect = new CvRect();
+        Rectangle equ_rect = new Rectangle();
 		double weight_scale;
 
 		CvHidHaarClassifierCascade cascade = _cascade.hidCascade;
@@ -268,10 +269,10 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 		weight_scale = 1./(equ_rect.width*equ_rect.height);
 		cascade.invWindowArea = weight_scale;
 
-		cascade.p0.setCoords(equ_rect.x, equ_rect.y);
-		cascade.p1.setCoords(equ_rect.x + equ_rect.width, equ_rect.y);
-		cascade.p2.setCoords(equ_rect.x, equ_rect.y + equ_rect.height);
-		cascade.p3.setCoords(equ_rect.x + equ_rect.width, equ_rect.y + equ_rect.height);
+		cascade.p0.setLocation(equ_rect.x, equ_rect.y);
+		cascade.p1.setLocation(equ_rect.x + equ_rect.width, equ_rect.y);
+		cascade.p2.setLocation(equ_rect.x, equ_rect.y + equ_rect.height);
+		cascade.p3.setLocation(equ_rect.x + equ_rect.width, equ_rect.y + equ_rect.height);
 
 		{
 			for (int i = 0; i < _cascade.getCount(); i++ ) {
@@ -293,7 +294,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 						boolean flagx = false, flagy = false;
 						int x0 = 0, y0 = 0;
 
-						CvRect r[] = new CvRect[feature.rects.length];
+						Rectangle r[] = new Rectangle[feature.rects.length];
 
 						for (int k = 0; k < r.length; k++ ) {
 							r[k] = feature.rects[k].r;
@@ -321,7 +322,7 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 						}
 
 						for (int k = 0; k < r.length; k++ ) {
-							CvRect tr = new CvRect();
+                            Rectangle tr = new Rectangle();
 							double correction_ratio;
 
 							if( flagx ) {
@@ -345,10 +346,10 @@ public class HaarClassifierDetection implements IDetectionPlugin , ISwingCustomi
 							correction_ratio = weight_scale * (!feature.tilted ? 1 : 0.5);
 
 							if( !feature.tilted ) {
-								hidFeature.rect[k].p0 = new Point(tr.x, tr.y);
-								hidFeature.rect[k].p1 = new Point(tr.x + tr.width, tr.y);
-								hidFeature.rect[k].p2 = new Point(tr.x, tr.y + tr.height);
-								hidFeature.rect[k].p3 = new Point(tr.x + tr.width, tr.y + tr.height);
+                                hidFeature.rect[k].p0 = new Point(tr.x, tr.y);
+                                hidFeature.rect[k].p1 = new Point(tr.x + tr.width, tr.y);
+                                hidFeature.rect[k].p2 = new Point(tr.x, tr.y + tr.height);
+                                hidFeature.rect[k].p3 = new Point(tr.x + tr.width, tr.y + tr.height);
 							}
 							else {
 //								hidFeature.rect[k].p2 = sum_elem_ptr(*tilted, tr.y + tr.width, tr.x +

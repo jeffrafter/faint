@@ -3,18 +3,15 @@
  */
 package de.offis.faint.detection.plugins.haar;
 
-import java.awt.Dimension;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.awt.Point;
 
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * @author maltech
@@ -60,8 +57,8 @@ public class XMLParser {
 		
 		// read size
 		String[] size = doc.getElementsByTagName(ICV_HAAR_SIZE_NAME).item(0).getTextContent().split(" ");
-		cascade.origWindowSize = new Point(Integer.valueOf(size[0]), Integer.valueOf(size[1]));
-		cascade.realWindowSize = new Point();
+        cascade.origWindowSize = new Point(Integer.valueOf(size[0]), Integer.valueOf(size[1]));
+        cascade.realWindowSize = new Point();
 		
 		// read stages
 		ArrayList<Node> stageNodes = getSpecificChildNodes(doc.getElementsByTagName(ICV_HAAR_STAGES_NAME).item(0), EMPTY_TAG);

@@ -1,7 +1,7 @@
 package de.offis.faint.detection.plugins.haar;
 
-import java.awt.Dimension;
 import java.io.Serializable;
+import java.awt.Point;
 
 /**
  * Port of C struct as found in cvhaar.h
@@ -39,10 +39,20 @@ public	class CvHidHaarClassifierCascade implements Serializable {
     int[][] sum;
     long[][] sqsum;
     int[][] tilted; //cvMAt
-    Point pq0= new Point(), pq1= new Point(), pq2= new Point(), pq3= new Point(); //sqsumtype
-    Point p0 = new Point(), p1= new Point(), p2= new Point(), p3= new Point(); //sumtype
-    
-	public CvHidHaarClassifierCascade(int count) {
+    Point pq0= new Point();
+    Point pq1= new Point();
+    Point pq2= new Point();
+    Point pq3= new Point(); //sqsumtype
+    Point p0 = new Point();
+    Point p1= new Point();
+    Point p2= new Point();
+    Point p3= new Point(); //sumtype
+
+
+
+
+
+    public CvHidHaarClassifierCascade(int count) {
 		stageClassifiers = new CvHidHaarStageClassifier[count];
 	}
 
