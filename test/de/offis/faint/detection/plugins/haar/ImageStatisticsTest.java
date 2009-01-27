@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.Collections;
-import de.offis.faint.detection.plugins.haar.ImageStatistics;
+import java.util.EnumSet;
 
 /**
  * Generated JavaDoc Comment.
@@ -24,7 +24,15 @@ public class ImageStatisticsTest {
 
         ImageStatistics sqStats = new ImageStatistics(image, Collections.<ImageStatistics.Flags>emptySet());
 
-        int totalSum = sqStats.getSum(0, 0, width, height);
-        System.out.println("totalSum = " + totalSum);
+        int sqTotalSum = sqStats.getSum(0, 0, width, height);
+        System.out.println(" sqTotalSum = " + sqTotalSum);
+
+        ImageStatistics rotStats = new ImageStatistics(image, EnumSet.of(ImageStatistics.Flags.TILTED_CASCADES));
+        
+        int rotTotalSum = rotStats.getSum(0, 0, width, height);
+        System.out.println("rotTotalSum = " + rotTotalSum);
+        
+        int tiltSum = rotStats.getTiltedSum(3, 1, 2, 3);
+        System.out.println("tiltSum = " + tiltSum);
     }
 }

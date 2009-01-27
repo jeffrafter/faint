@@ -4,7 +4,6 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.Set;
-import de.offis.faint.detection.plugins.haar.ImageStatistics;
 
 /**
  * Collection of statistics and functions for images that can be offset and scaled.
@@ -13,7 +12,9 @@ import de.offis.faint.detection.plugins.haar.ImageStatistics;
  */
 public class ImageModel {
 
-    private BufferedImage image;
+    private final BufferedImage image;
+    private final int baseWidth;
+    private final int baseHeight;
     private ImageStatistics stats;
     private int offsetX = 0;
     private int offsetY = 0;
@@ -25,8 +26,10 @@ public class ImageModel {
 
 
 
-    public ImageModel(BufferedImage image, boolean hasTilted) {
+    public ImageModel(BufferedImage image, int baseWidth, int baseHeight, boolean hasTilted) {
         this.image = image;
+        this.baseWidth = baseWidth;
+        this.baseHeight = baseHeight;
         Set<ImageStatistics.Flags> flags = EnumSet.noneOf(ImageStatistics.Flags.class);
         if (hasTilted) {
             flags.add(ImageStatistics.Flags.TILTED_CASCADES);
@@ -201,13 +204,13 @@ public class ImageModel {
 
 
 
-    public void setWindow(int offsetX, int offsetY, float scale, int originalWindowWidth, int originalWindowHeight) {
+    public void setWindow(int offsetX, int offsetY, float scale) {
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.scale = scale;
         // the opencv method -2 for some reason?
-        this.windowWidth = Math.round((originalWindowWidth - 2) * scale);
-        this.windowHeight = Math.round((originalWindowHeight - 2) * scale);
+        this.windowWidth = Math.round((baseWidth - 2) * scale);
+        this.windowHeight = Math.round((baseHeight - 2) * scale);
 
         // invalidate caches
         cacheArea = -1;

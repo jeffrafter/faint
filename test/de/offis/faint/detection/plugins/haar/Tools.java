@@ -58,6 +58,7 @@ public class Tools {
 
 
         for (String fileName : toConvert) {
+            System.out.println("Converting = " + fileName);
             URL in = OpenCVDetection.class.getResource(fileName + ".xml");
             assert in != null: "The resource [" + fileName + ".xml" + "] was not found";
 

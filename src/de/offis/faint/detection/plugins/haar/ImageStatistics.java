@@ -80,10 +80,15 @@ public class ImageStatistics {
 
 
 
+
     public int getTiltedSum(int x, int y, int width, int height) {
         int[][] cache = this.cache.getRotSumCache();
-        return cache[y + width][x + width] + cache[y + height][x + height] - cache[y][x] -
-               cache[y + width + height][x + width - height];
+        // top + bottom - right - left
+        final int top = cache[y][x];
+        final int bottom = cache[y + width + height][x + width - height + 1];
+        final int right = cache[y + width][x + width + 1];
+        final int left = cache[y + height][x - height + 1];
+        return top + bottom - right - left;
     }
 
 
@@ -301,83 +306,106 @@ public class ImageStatistics {
             final int width = image.getWidth();
             final int height = image.getHeight();
 
-            sumCache = new int[height][width];
-            sqSumCache = new long[height][width];
-            rotSumCache = new int[height][width];
+            sumCache = new int[height + 1][width + 1];
+            sqSumCache = new long[height + 1][width + 1];
+            rotSumCache = new int[height + 2][width + 2];
 
             // go through the image summing the data
             final int[] row = new int[width];
+            final int[] lastRow = new int[width];
 
-            // first row is special
+            // first two rows are special
+            // y == 1
             if (height > 0) {
                 image.getRGB(0, 0, width, 1, row, 0, width);
                 int rowSum = 0;
                 long sqRowSum = 0;
 
-                for (int x = 1; x < width; x++) {
-                    final int gray = getGrayValue(row[x]);
+                for (int x = 1; x <= width; x++) {
+                    final int gray = getGrayValue(row[x - 1]);
 
                     rowSum += gray;
                     sqRowSum += gray * gray;
 
-                    sumCache[0][x] = rotSumCache[0][x] = rowSum;
-                    sqSumCache[0][x] = sqRowSum;
+                    sumCache[1][x] = rowSum;
+                    lastRow[x - 1] = rotSumCache[1][x] = gray;
+                    sqSumCache[1][x] = sqRowSum;
                 }
             }
 
-            for (int y = 1; y < height; y++) {
-                image.getRGB(0, y, width, 1, row, 0, width);
+            // y == 2
+            if (height > 1) {
+                image.getRGB(0, 1, width, 1, row, 0, width);
                 int rowSum = 0;
                 long sqRowSum = 0;
 
-                // first two columns are special due to x - 1 and x - 2 in computations
+                for (int x = 1; x < width; x++) {
+                    final int gray = getGrayValue(row[x - 1]);
+
+                    rowSum += gray;
+                    sqRowSum += gray * gray;
+
+                    sumCache[2][x] = sumCache[1][x] + rowSum;
+                    sqSumCache[2][x] = sqSumCache[1][x] + sqRowSum;
+                    rotSumCache[2][x] = rotSumCache[1][x - 1] + lastRow[x - 1] + rotSumCache[1][x + 1] + gray;
+                    lastRow[x - 1] = gray;
+                }
+
+                // last column is special
                 if (width > 0) {
-                    // first column
+                    final int gray = getGrayValue(row[width - 1]);
+
+                    rowSum += gray;
+                    sqRowSum += gray * gray;
+
+                    sumCache[2][width] = sumCache[1][width] + rowSum;
+                    sqSumCache[2][width] = sqSumCache[1][width] + sqRowSum;
+                    rotSumCache[2][width] = rotSumCache[1][width - 1] + lastRow[width - 1] + gray;
+                    lastRow[width - 1] = gray;
+                }
+
+            }
+
+            for (int y = 3; y <= height; y++) {
+                image.getRGB(0, y - 1, width, 1, row, 0, width);
+                int rowSum = 0;
+                long sqRowSum = 0;
+
+                // first column is special
+                if (width > 0) {
                     final int gray = getGrayValue(row[0]);
                     rowSum += gray;
                     sqRowSum += gray * gray;
 
-                    sumCache[y][0] = sumCache[y - 1][0] + rowSum;
-                    sqSumCache[y][0] = sqSumCache[y - 1][0] + sqRowSum;
-                    rotSumCache[y][0] = gray;
-                }
-
-                if (width > 1) {
-                    // second column
-                    final int gray = getGrayValue(row[1]);
-                    rowSum += gray;
-                    sqRowSum += gray * gray;
                     sumCache[y][1] = sumCache[y - 1][1] + rowSum;
                     sqSumCache[y][1] = sqSumCache[y - 1][1] + sqRowSum;
-                    rotSumCache[y][1] = rotSumCache[y - 1][0] + rotSumCache[y][0] + gray;
+                    rotSumCache[y][1] = rotSumCache[y - 1][2] + lastRow[0] + gray;
+                    lastRow[0] = gray;
                 }
 
-                // the rest of the image
+                // from 2nd column to second to last column
                 for (int x = 2; x < width; x++) {
-                    final int gray = getGrayValue(row[x]);
-
+                    final int gray = getGrayValue(row[x - 1]);
                     rowSum += gray;
                     sqRowSum += gray * gray;
 
                     sumCache[y][x] = sumCache[y - 1][x] + rowSum;
                     sqSumCache[y][x] = sqSumCache[y - 1][x] + sqRowSum;
-
-                    // in this pass only the top half of the sum is computed
-                    rotSumCache[y][x] = rotSumCache[y - 1][x - 1] + rotSumCache[y][x - 1] -
-                                        rotSumCache[y - 1][x - 2] + gray;
-                }
-            }
-
-            // second pass for rotated rect to calculate the bottom half
-            // bottom row doesn't need processing (there is no second half)
-            for (int y = height - 2; y >= 0; y--) {
-                for (int x = width - 1; x >= 2; x--) {
-                    rotSumCache[y][x] += rotSumCache[y + 1][x - 1] - rotSumCache[y][x - 2];
+                    rotSumCache[y][x] = rotSumCache[y - 1][x - 1] + lastRow[x - 1] + rotSumCache[y - 1][x + 1] -
+                                        rotSumCache[y - 2][x] + gray;
+                    lastRow[x - 1] = gray;
                 }
 
-                // x == 1 is special (x == 0 doesn't need to be processed)
+                // last column is special
                 if (width > 0) {
-                    rotSumCache[y][1] += rotSumCache[y + 1][0];
+                    final int gray = getGrayValue(row[width - 1]);
+                    rowSum += gray;
+                    sqRowSum += gray * gray;
+
+                    sumCache[y][width] = sumCache[y - 1][width] + rowSum;
+                    sqSumCache[y][width] = sqSumCache[y - 1][width] + sqRowSum;
+                    rotSumCache[y][width] = rotSumCache[y - 1][width - 1] + lastRow[width - 1] + gray;
+                    lastRow[width - 1] = gray;
                 }
             }
         }

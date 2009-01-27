@@ -53,7 +53,7 @@ public class MultiscaleDetection {
         final int imageWidth = image.getWidth();
         final int imageHeight = image.getHeight();
 
-        final ImageModel model = new ImageModel(image, cascade.hasTiltedFeatures());
+        final ImageModel model = new ImageModel(image, cascade.getWidth(), cascade.getHeight(), cascade.hasTiltedFeatures());
 
         // calculate number of scale factors
         int nFactors = 0;
@@ -66,11 +66,21 @@ public class MultiscaleDetection {
             nFactors++;
         }
 
+//        nFactors = (int) Math.min(
+//                Math.log((imageWidth - 10) / (double) cascade.getWidth()) / Math.log(scaleFactor),
+//                Math.log((imageHeight - 10) / (double) cascade.getHeight()) / Math.log(scaleFactor)
+//        ); // seems to be one less than the above method?!
+//
+//        startFactor = (int) Math.ceil(Math.max(
+//                Math.log(minSize / (double) cascade.getWidth()) / Math.log(scaleFactor),
+//                Math.log(minSize / (double) cascade.getHeight()) / Math.log(scaleFactor)
+//        ));
+
         float factor = (float) Math.pow(scaleFactor, startFactor);
         for (int scaleStep = startFactor; scaleStep < nFactors; factor *= scaleFactor, scaleStep++) {
 //            log.println("factor loop: " + factor + " nfactors=" + (nFactors - scaleStep));
             double ystep = Math.max(2, factor);
-            model.setWindow(0, 0, factor, cascade.getWidth(), cascade.getHeight());
+            model.setWindow(0, 0, factor);
 
             int windowWidth = (int) (factor * cascade.getWidth());
             int windowHeight = (int) (factor * cascade.getHeight());
@@ -122,7 +132,7 @@ public class MultiscaleDetection {
         MultiscaleDetection detector = new MultiscaleDetection(cascade);
         try {
             System.out.println("Loading image.");
-            BufferedImage image = ImageIO.read(new File("/home/matt/projects/face-recognition/sample-images/groups/EMP-6713186.jpg"));
+            BufferedImage image = ImageIO.read(new File("/home/matt/projects/face-recognition/sample-images/groups/EMP-6382066.jpg"));
             //scale image to smaller size (inside 1000x1000);
             int width = image.getWidth();
             int height = image.getHeight();
@@ -154,10 +164,14 @@ public class MultiscaleDetection {
             final long targetTime = 10L * 1000L * 1000L * 1000L; // 10 seconds
             int count = 0;
             final int minFaceSize = (int) (Math.min(image.getWidth(), image.getHeight()) * 0.25f);
+
+            GroupingPolicy grouping = new GroupingPolicy();
+
             final long t0 = System.nanoTime();
             while ((System.nanoTime() - t0) < targetTime) {
 //                detector.log = new PrintWriter(new FileOutputStream(new File("haarDetectObjects4.log")));
                 cvRectArrayList = detector.detectObjects(image, minFaceSize);
+                cvRectArrayList = grouping.reduceAreas(cvRectArrayList);
 //                detector.log.close();
 //                detector.log = null;
                 count++;
@@ -166,16 +180,11 @@ public class MultiscaleDetection {
 
             System.out.println("Ran " + count + " times (" + ((t1 - t0) / (1000 * 1000 * 1000D)) + " seconds total)");
 
-            System.out.println(cvRectArrayList.size() + " faces found.");
-        }
-
-
-        catch (
-                Exception e
-                )
-
-
-        {
+            System.out.println(cvRectArrayList.size() + " object(s) found.");
+            for (Rectangle rectangle : cvRectArrayList) {
+                System.out.println(" " + rectangle);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
