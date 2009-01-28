@@ -18,7 +18,7 @@ import javax.xml.stream.XMLStreamException;
  *
  * @author <a href="mailto:matt.nathan@paphotos.com">Matt Nathan</a>
  */
-public class MultiscaleDetection {
+public class MultiscaleDetection implements ObjectDetector {
 
     private ClassifierCascade cascade;
     private float scaleFactor;
@@ -132,7 +132,7 @@ public class MultiscaleDetection {
         MultiscaleDetection detector = new MultiscaleDetection(cascade);
         try {
             System.out.println("Loading image.");
-            BufferedImage image = ImageIO.read(new File("/home/matt/projects/face-recognition/sample-images/groups/EMP-6382066.jpg"));
+            BufferedImage image = ImageIO.read(new File("/home/matt/projects/face-recognition/sample-images/groups/EMP-6713186.jpg"));
             //scale image to smaller size (inside 1000x1000);
             int width = image.getWidth();
             int height = image.getHeight();

@@ -22,10 +22,11 @@
 
 package de.offis.faint.controller;
 
+import java.awt.Graphics;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
 
 /**
@@ -42,7 +43,16 @@ public class BufferedImageCache {
 			return cachedImage;
 		else
 			try {
-				return ImageIO.read(file);
+                // convert the image into a more efficient type
+                BufferedImage tmp = ImageIO.read(file);
+                BufferedImage image = GraphicsEnvironment.getLocalGraphicsEnvironment().
+                        getDefaultScreenDevice().getDefaultConfiguration().
+                        createCompatibleImage(tmp.getWidth(), tmp.getHeight(), tmp.getTransparency());
+                Graphics g = image.createGraphics();
+                g.drawImage(tmp, 0, 0, null);
+                g.dispose();
+                tmp.flush();
+                return image;
 			} catch (IOException e) {
 				e.printStackTrace();
 				return null;

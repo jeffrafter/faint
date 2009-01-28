@@ -24,10 +24,12 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
             "haarcascade_frontalface_alt.bin",
             "haarcascade_frontalface_alt_tree.bin",
             "haarcascade_frontalface_alt2.bin",
+            "haarcascade_upperbody.bin",
 //		"haarcascade_profileface.bin"
     };
 
     private GroupingPolicy groupingPolicy;
+    private boolean scaleImage = true;
     private transient HaarClassifierSettingsPanel settingsPanel = null;
 
 
@@ -81,6 +83,22 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
 
 
 
+    public boolean isScaleImage() {
+        return scaleImage;
+    }
+
+
+
+
+
+    public void setScaleImage(boolean scaleImage) {
+        this.scaleImage = scaleImage;
+    }
+
+
+
+
+
     public GroupingPolicy getGroupingPolicy() {
         return groupingPolicy;
     }
@@ -118,7 +136,10 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
 
 
     List<Rectangle> detectObjects(BufferedImage image, int minScanWindowSize) {
-        MultiscaleDetection detector = new MultiscaleDetection(cascade, scaleFactor);
+        ObjectDetector detector = new MultiscaleDetection(cascade, scaleFactor);
+        if (scaleImage) {
+            detector = new ScaledImageDetection(detector);
+        }
 
         List<Rectangle> result = detector.detectObjects(image, minScanWindowSize);
         return groupingPolicy.reduceAreas(result);
