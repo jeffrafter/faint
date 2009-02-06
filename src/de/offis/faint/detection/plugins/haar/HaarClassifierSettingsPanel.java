@@ -47,6 +47,7 @@ public class HaarClassifierSettingsPanel extends JPanel{
 	private JSpinner scaleFactor = new JSpinner();
     private JSpinner minimumGroupMembers = new JSpinner();
     private JCheckBox showAllMatches = new JCheckBox("Show all matches");
+    private JCheckBox scaleImage = new JCheckBox("Scale image before search");
     private final String[] CASCADE_SUFFIXES = {".xml",".XML"};
 	protected static final String SUBFOLDER = "opencv";
 	
@@ -77,6 +78,12 @@ public class HaarClassifierSettingsPanel extends JPanel{
         minimumGroupMembersPanel.add(showAllMatches, BorderLayout.SOUTH);
         showAllMatches.addActionListener(listener);
         rows.addRow(minimumGroupMembersPanel);
+
+        JPanel scaleImagePanel = new JPanel(new BorderLayout());
+        scaleImagePanel.setBorder(new TitledBorder("Scale Image"));
+        scaleImagePanel.add(scaleImage, BorderLayout.CENTER);
+        scaleImage.addActionListener(listener);
+        rows.addRow(scaleImagePanel);
 
         this.add(rows, BorderLayout.NORTH);
 		this.model = model;
@@ -115,6 +122,8 @@ public class HaarClassifierSettingsPanel extends JPanel{
             minimumGroupMembers.setValue(model.getGroupingPolicy().getMinimumGroupSize());
             minimumGroupMembers.setEnabled(true);
         }
+
+        scaleImage.setSelected(model.isScaleImage());
     }
 	
 	private class EventListener implements ActionListener, ChangeListener{
@@ -135,6 +144,8 @@ public class HaarClassifierSettingsPanel extends JPanel{
                     minimumGroupMembers.setEnabled(false);
                     model.getGroupingPolicy().setMinimumGroupSize(GroupingPolicy.ALL);
                 }
+            } else if (e.getSource() == scaleImage) {
+                model.setScaleImage(scaleImage.isSelected());
             }
 		}
 

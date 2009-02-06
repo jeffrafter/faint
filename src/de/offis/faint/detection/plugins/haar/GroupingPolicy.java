@@ -54,15 +54,16 @@ public class GroupingPolicy implements Serializable {
 
     private boolean isNeighbour(Rectangle r1, Rectangle r2) {
         // based on the 20% factor in opencv
-        int distance = Math.round(r1.width * 0.2f);
-        return r2.x <= r1.x + distance &&
-               r2.x >= r1.x - distance &&
-               r2.y <= r1.y + distance &&
-               r2.y >= r1.y - distance &&
-               r2.x + r2.width <= r1.x + r1.width + distance &&
-               r2.x + r2.width >= r1.x + r1.width - distance &&
-               r2.y + r2.height <= r1.y + r1.height + distance &&
-               r2.y + r2.height >= r1.y + r1.height - distance;
+        int distanceh = Math.round(r1.width * 0.2f);
+        int distancev = Math.round(r1.height * 0.2f);
+        return r2.x <= r1.x + distanceh &&
+               r2.x >= r1.x - distanceh &&
+               r2.y <= r1.y + distancev &&
+               r2.y >= r1.y - distancev &&
+               r2.x + r2.width <= r1.x + r1.width + distanceh &&
+               r2.x + r2.width >= r1.x + r1.width - distanceh &&
+               r2.y + r2.height <= r1.y + r1.height + distancev &&
+               r2.y + r2.height >= r1.y + r1.height - distancev;
     }
 
 
