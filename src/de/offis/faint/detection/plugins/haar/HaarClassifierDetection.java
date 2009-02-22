@@ -29,7 +29,8 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
     };
 
     private GroupingPolicy groupingPolicy;
-    private boolean scaleImage = true;
+    private boolean scaleImage = false;
+    private boolean useHistogramEqualization = false;
     private transient HaarClassifierSettingsPanel settingsPanel = null;
 
 
@@ -37,7 +38,7 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
 
 
     public HaarClassifierDetection() {
-        setCascade(BUILT_IN_CASCADES[0]);
+        setCascade("haarcascade_frontalface_default.xml");
         groupingPolicy = new GroupingPolicy();
     }
 
@@ -136,6 +137,11 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
 
 
     List<Rectangle> detectObjects(BufferedImage image, int minScanWindowSize) {
+    	
+    	if (useHistogramEqualization) {
+    		image = HistogramEqualizer.histoGramEqualizeGray(image);
+    	}
+    	
         ObjectDetector detector = new MultiscaleDetection(cascade, scaleFactor);
         if (scaleImage) {
             detector = new ScaledImageDetection(detector);
@@ -244,4 +250,13 @@ public class HaarClassifierDetection implements IDetectionPlugin, ISwingCustomiz
     public void setScale(float scaleFactor) {
         this.scaleFactor = scaleFactor;
     }
+
+
+	public boolean isPerformHistogramEqualization() {
+		return useHistogramEqualization;
+	}
+	
+	public void setPerformHistogramEqualization(boolean useHistogramEqalization) {
+		this.useHistogramEqualization = useHistogramEqalization;
+	}
 }

@@ -48,6 +48,7 @@ public class HaarClassifierSettingsPanel extends JPanel{
     private JSpinner minimumGroupMembers = new JSpinner();
     private JCheckBox showAllMatches = new JCheckBox("Show all matches");
     private JCheckBox scaleImage = new JCheckBox("Scale image before search");
+    private JCheckBox performHistogramEqualization = new JCheckBox("Perform histogram equalization");
     private final String[] CASCADE_SUFFIXES = {".xml",".XML"};
 	protected static final String SUBFOLDER = "opencv";
 	
@@ -84,6 +85,12 @@ public class HaarClassifierSettingsPanel extends JPanel{
         scaleImagePanel.add(scaleImage, BorderLayout.CENTER);
         scaleImage.addActionListener(listener);
         rows.addRow(scaleImagePanel);
+        
+        JPanel performHistogramEqualizationPanel = new JPanel(new BorderLayout());
+        performHistogramEqualizationPanel.setBorder(new TitledBorder("Scale Image"));
+        performHistogramEqualizationPanel.add(performHistogramEqualization, BorderLayout.CENTER);
+        performHistogramEqualization.addActionListener(listener);
+        rows.addRow(performHistogramEqualizationPanel);
 
         this.add(rows, BorderLayout.NORTH);
 		this.model = model;
@@ -124,6 +131,7 @@ public class HaarClassifierSettingsPanel extends JPanel{
         }
 
         scaleImage.setSelected(model.isScaleImage());
+        performHistogramEqualization.setSelected(model.isPerformHistogramEqualization());
     }
 	
 	private class EventListener implements ActionListener, ChangeListener{
@@ -146,6 +154,8 @@ public class HaarClassifierSettingsPanel extends JPanel{
                 }
             } else if (e.getSource() == scaleImage) {
                 model.setScaleImage(scaleImage.isSelected());
+            } else if (e.getSource() == performHistogramEqualization) {
+                model.setPerformHistogramEqualization(performHistogramEqualization.isSelected());
             }
 		}
 
