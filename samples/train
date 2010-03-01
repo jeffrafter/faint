@@ -1,0 +1,2 @@
+#!/bin/sh
+java -Djava.awt.headless=true -Djava.library.path=../bin -cp ../bin faint.Manager train $1 $2 $3 $4 $5 $6

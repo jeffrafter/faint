@@ -1,26 +1,15 @@
-JAVAPATH	= C:\Programme\Java\jdk1.5.0_07
-OPENCVPATH	= C:\\Programme\\OpenCV
-FLAGS		= -Wall -mno-cygwin -shared -Wl,--add-stdcall-alias
-INCLUDES  	= -I"$(JAVAPATH)\include" \
-			  -I"$(JAVAPATH)\include\win32" \
-			  -I"$(OPENCVPATH)\cv\include" \
-              -I"$(OPENCVPATH)\cvaux\include" \
-              -I"$(OPENCVPATH)\cxcore\include" \
-              -I"$(OPENCVPATH)\cv\include" \
-              -I"$(OPENCVPATH)\otherlibs\highgui" \
-              
-LIBS        = $(OPENCVPATH)\\lib\\cv.lib \
-              $(OPENCVPATH)\\lib\\highgui.lib \
-              $(OPENCVPATH)\\lib\\cxcore.lib
-
-all : opencv.dll
+FLAGS	= -dynamiclib
+INCLUDES = -I/System/Library/Frameworks/JavaVM.framework/Headers -I/usr/local/include/opencv
+LIBS = -L/usr/local/lib -lcxcore -lcv -lhighgui -lcvaux -lml -framework JavaVM
+							
+all : libopencv.jnilib
 
 opencv.h :
-	javah -jni -classpath ../bin -o opencv.h de.offis.faint.detection.plugins.opencv.OpenCVDetection
+	javah -jni -classpath ../bin -o opencv.h faint.OpenCV
 	
-opencv.dll : opencv.h
-	gcc  $(FLAGS) $(INCLUDES) opencv.c -o opencv.dll $(LIBS)
-	mv opencv.dll ../src/de/offis/faint/detection/plugins/opencv
+libopencv.jnilib : opencv.h
+	g++ -o libopencv.jnilib $(FLAGS) $(INCLUDES) $(LIBS) opencv.c
+	mv libopencv.jnilib ../bin
 
 clean :
 	rm opencv.h

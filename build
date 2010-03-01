@@ -1,0 +1,17 @@
+rm -rf bin
+mkdir bin
+cd src
+javac -Xlint:unchecked -d ../bin/ -cp . \
+ faint/OpenCV.java \
+ faint/EigenfaceRecognition.java \
+ faint/Manager.java \
+ faint/Constants.java \
+ faint/FaceDatabase.java \
+ faint/Region.java \
+ faint/CovarianceMatrix.java \
+ faint/ImageModel.java \
+ faint/Utilities.java 
+cd ..
+cd jni
+make
+cd ..
