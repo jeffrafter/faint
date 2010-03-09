@@ -32,82 +32,83 @@ import java.util.Iterator;
 
 public class Manager {
 
-	// Dataholding
-	private FaceDatabase faceDB;
-	private String path = "./data/";
-	
-  // Private constructor  	
-	private Manager(){
-		// try to load database from disk
-		System.out.println("Preparing face database...");
-		try {
-			faceDB = FaceDatabase.recoverFromDisk(path); 
-		}catch(IOException ex){
-			faceDB = new FaceDatabase();
-		}		
-	}
-	
-	/**
-	 * This method uses the active Plugin of the Detection Hot Spot to
-	 * detect faces in an image.
-	 * 
-	 * @param image  The image that will be analyzed.
-	 * @param storeInDB	 Determines if possible faces should be send to the database directly.
-	 * @return  Array of Region elements, that are probably faces or null, if no faces were found.	 
+  // Dataholding
+  private FaceDatabase faceDB;
+  private String path;
+  
+  // Private constructor    
+  private Manager(String path){
+    // try to load database from disk
+    try {
+      this.path = path;
+      faceDB = FaceDatabase.recoverFromDisk(path); 
+    }catch(IOException ex){
+      faceDB = new FaceDatabase();
+    }    
+  }
+  
+  /**
+   * This method uses the active Plugin of the Detection Hot Spot to
+   * detect faces in an image.
+   * 
+   * @param image  The image that will be analyzed.
+   * @param storeInDB   Determines if possible faces should be send to the database directly.
+   * @return  Array of Region elements, that are probably faces or null, if no faces were found.   
   */
-	public Region[] detectFaces(ImageModel image, boolean storeInDB){		
+  public Region[] detectFaces(File image, boolean storeInDB){    
     OpenCV opencv = new OpenCV();
-		Region[] possibleFaces = opencv.detectFaces(image.getFile().getAbsolutePath());
-		
-		// Store Regions in DB
-		if (possibleFaces != null && storeInDB) {
-			for (int i = 0; i <possibleFaces.length; i++){
-				faceDB.put(possibleFaces[i], Constants.UNKNOWN_FACE, this.path);
-			}
+    Region[] possibleFaces = opencv.detectFaces(image.getAbsolutePath());
+    
+    // Store Regions in DB
+    if (possibleFaces != null && storeInDB) {
+      for (int i = 0; i <possibleFaces.length; i++){
+        faceDB.put(possibleFaces[i], Constants.UNKNOWN_FACE, this.path);
+      }
       try {
         faceDB.writeToDisk(path);
       } catch (IOException io) {
-        System.out.println("Could not write face database.");
+        System.err.println("Could not write face database.");
         return null;
       }
-    }		
-		return possibleFaces;
-	}
-	
-	/** 
-	 * This method uses the active Plugin of the Recognition Hot Spot to try
-	 * to recognize a given face.
-	 * 
-	 * @param face Region that will be analyzed.
-	 * @return HashTable containing names of known people and weights describing their similarity to the given face.
-	 */
-	public HashMap<String, Integer> recognizeFace(Region face){
+    }    
+    return possibleFaces;
+  }
+  
+  /** 
+   * This method uses the active Plugin of the Recognition Hot Spot to try
+   * to recognize a given face.
+   * 
+   * @param face Region that will be analyzed.
+   * @return HashTable containing names of known people and weights describing their similarity to the given face.
+   */
+  public HashMap<String, Integer> recognizeFace(Region face){
     EigenfaceRecognition recognition = new EigenfaceRecognition(faceDB, path);
-		HashMap<String, Integer> result = recognition.getRecognitionPoints(face);
+    HashMap<String, Integer> result = recognition.getRecognitionPoints(face);
     
-    // Run a simple context filter (i.e., if coming from a known image, it must 
-    // match a known region on that image or it is not weighted)
-		Region[] knownRegions = faceDB.getRegionsForImage(face.getImage());		
-		for (String person : result.keySet()){
-			for (Region regionOnImage : knownRegions){
-				if (!face.equals(regionOnImage) && faceDB.getAnnotation(regionOnImage).equals(person))
-					result.put(person, 0);					
-			}
-		}
-		return result;
-	}
+    // Run a simple context filter (i.e., if the weighted person appears in 
+    // another region in the same image then assume this is not them. This
+    // works great except for pictures with mirrors, background photos, and
+    // collages)
+    Region[] knownRegions = faceDB.getRegionsForImage(face.getImage());    
+    for (String person : result.keySet()){
+      for (Region regionOnImage : knownRegions){
+        if (!face.equals(regionOnImage) && faceDB.getAnnotation(regionOnImage).equals(person))
+          result.put(person, 0);          
+      }
+    }
+    return result;
+  }
 
   public void trainFace(Region face, String annotation) {
     faceDB.put(face, annotation, this.path);
     try {
       faceDB.writeToDisk(path);
     } catch (IOException io) {
-      System.out.println("Could not write face database.");
+      System.err.println("Could not write face database.");
       return;
     }
-    System.out.println("Training image added for: " + annotation);
   }
-		
+    
   /* 
    * Primary cli entry points. This code is seriously ugly, but I was trying to
    * to keep this section as straight-forward as possible.
@@ -128,45 +129,51 @@ public class Manager {
   }
     
   public static void detect(String[] args) {
-    if (args.length != 2) {
-      System.out.println("detect <path/to/image>");
+    if (args.length != 3) {
+      System.out.println("detect <path/to/data> <path/to/image>");
       return;
     }
-    String path = args[1];
-    Manager manager = new Manager();
-    manager.detectFaces(new ImageModel(path), false);  
+    String data = args[1];
+    String image = args[2];
+    Manager manager = new Manager(data);
+    manager.detectFaces(new File(image), false);  
   }
 
   public static void train(String[] args) {
-    if (args.length != 7) {
-      System.out.println("train <path/to/image> x y width height annotation");
+    if (args.length != 8) {
+      System.out.println("train <path/to/data> <path/to/image> x y width height annotation");
       return;
     }
-    String path = args[1];
-    int x = Integer.parseInt(args[2]);
-    int y = Integer.parseInt(args[3]);
-    int w = Integer.parseInt(args[4]);
-    int h = Integer.parseInt(args[5]);
-    String annotation = args[6];
-    Region region = new Region(x, y, w, h, 0, path);
+    String data = args[1];
+    String image = args[2];
+    int x = Integer.parseInt(args[3]);
+    int y = Integer.parseInt(args[4]);
+    int w = Integer.parseInt(args[5]);
+    int h = Integer.parseInt(args[6]);
+    String annotation = args[7];
+    Region region = new Region(x, y, w, h, 0, image);
     region.setUsedForTraining(true);
-    Manager manager = new Manager();
+    Manager manager = new Manager(data);
     manager.trainFace(region, annotation);        
   }  
   
   public static void recognize(String[] args) {
-    if (args.length != 6) {
-      System.out.println("recognize <path/to/image> x y width height");
+    if (args.length != 7) {
+      System.out.println("recognize <path/to/data> <path/to/image> x y width height");
       return;
     }
-    String path = args[1];
-    int x = Integer.parseInt(args[2]);
-    int y = Integer.parseInt(args[3]);
-    int w = Integer.parseInt(args[4]);
-    int h = Integer.parseInt(args[5]);
-    Region region = new Region(x, y, w, h, 0, path);
-    Manager manager = new Manager();
-    HashMap<String, Integer> result = manager.recognizeFace(region);          
+    String data = args[1];
+    String image = args[2];
+    int x = Integer.parseInt(args[3]);
+    int y = Integer.parseInt(args[4]);
+    int w = Integer.parseInt(args[5]);
+    int h = Integer.parseInt(args[6]);
+    Region region = new Region(x, y, w, h, 0, image);
+    // This might be double caching, need to think about it
+    String cached = region.cache(data);
+    System.out.println(cached);
+    Manager manager = new Manager(data);
+    HashMap<String, Integer> result = manager.recognizeFace(region); 
     Iterator iterator = result.keySet().iterator();           
     while (iterator.hasNext()) {  
       String key = iterator.next().toString();  

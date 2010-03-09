@@ -23,31 +23,14 @@
 package faint;
 
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 
 public class Constants {
-	
-	public static final String RELEASE = "unknown";
-	
-	public static final int INITIAL_HORIZONTAL_DIVIDERLOCATION = 280;
-
-	public static final int PREVIEW_MARGIN = 3;
-
-	public static final Dimension THUMBNAIL_SIZE = new Dimension(100,75);
-	public static final int THUMBNAIL_MARGIN = 10;
-
-	public static final Dimension FACE_THUMBNAIL_SIZE = new Dimension(75,75);
-	public static final int FACE_THUMBNAIL_MARGIN = 20;
-	
-	public static final int SCALE_MODE = Image.SCALE_FAST;
-	public static final int THUMBNAIL_IMAGETYPE = BufferedImage.TYPE_3BYTE_BGR;
-
-	public static final String FACE_DB_FILE = "faces.bin";
-	public static final String UNKNOWN_FACE = "unknown";
-
-	public static final String CACHED_IMAGE_TYPE = "png";
-
-	public static final String[] IMAGE_SUFFIXES = {".jpg",".JPG",".jpeg",".JPEG",".png",".PNG"};
-	
+    
+  public static final int THUMBNAIL_IMAGETYPE = BufferedImage.TYPE_3BYTE_BGR;
+  public static final Dimension THUMBNAIL_SIZE = new Dimension(100,75);
+  public static final Dimension FACE_THUMBNAIL_SIZE = new Dimension(75,75);
+  public static final String FACE_DB_FILE = "faces.bin";
+  public static final String UNKNOWN_FACE = "unknown";
+  public static final String CACHED_IMAGE_TYPE = "png";
 }

@@ -39,44 +39,44 @@ import javax.imageio.ImageIO;
  *
  */
 public class Region implements Serializable{
-	
-	private static final long serialVersionUID = 4670842002974016100L;
-	
-	// Main attributes
-	private String image;
-	private int x, y, width, height;
-	private double angle;
-	private boolean usedForTraining = true;
+  
+  private static final long serialVersionUID = 4670842002974016100L;
+  
+  // Main attributes
+  private String image;
+  private int x, y, width, height;
+  private double angle;
+  private boolean usedForTraining = true;
 
-	private String cachedFile = null;
-	private transient BufferedImage thumbnail = null;
-	
-	public Region(int x, int y, int width, int height, double angle, String image){
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-		this.angle = angle;
-		this.image = image;
-	}	
-	
-	public String toString(){
-		return "position = ["+x+","+y+"] | width = "+width+" | height = "+height+" | angle = "+angle+" | image = "+this.image;
-	}
-	
-	public boolean equals(Object region){
-		if (region == null) return false;
-		Region that = (Region) region;
-		return (this.image.equals(that.image) &&
-				this.angle == that.angle &&
-				this.height == that.height &&
-				this.width == that.width &&
-				this.x == that.x &&
-				this.y == that.y);
-	}
-	
-	
-	//--------------- Cache Methods --------------------//
+  private String cachedFile = null;
+  private transient BufferedImage thumbnail = null;
+  
+  public Region(int x, int y, int width, int height, double angle, String image){
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.angle = angle;
+    this.image = image;
+  }  
+  
+  public String toString(){
+    return "position = ["+x+","+y+"] | width = "+width+" | height = "+height+" | angle = "+angle+" | image = "+this.image;
+  }
+  
+  public boolean equals(Object region){
+    if (region == null) return false;
+    Region that = (Region) region;
+    return (this.image.equals(that.image) &&
+        this.angle == that.angle &&
+        this.height == that.height &&
+        this.width == that.width &&
+        this.x == that.x &&
+        this.y == that.y);
+  }
+  
+  
+  //--------------- Cache Methods --------------------//
   /**
    * Returns the image portion that this regeion represents scaled to the given size.
    *
@@ -84,7 +84,7 @@ public class Region implements Serializable{
    * @param height The target height
    * @return A thumbnail of the image this region represents.
    */
-	public BufferedImage toThumbnail(String path, int width, int height){
+  public BufferedImage toThumbnail(String path, int width, int height){
     thumbnail = new BufferedImage(width, height, Constants.THUMBNAIL_IMAGETYPE);
     Graphics2D graphics = (Graphics2D) thumbnail.getGraphics();
     BufferedImage file = null;
@@ -107,7 +107,7 @@ public class Region implements Serializable{
     graphics.drawImage(file,-x,-y,null);
 
     return thumbnail;
-	}
+  }
 
   /**
    * Returns the image portion that this regeion represents scaled to the given size.
@@ -116,45 +116,50 @@ public class Region implements Serializable{
    * @return A thumbnail of the image this region represents.
    */
   public BufferedImage toThumbnail(String path, Dimension size) {
-		return this.toThumbnail(path, size.width, size.height);				
-	}
+    return this.toThumbnail(path, size.width, size.height);        
+  }
 
   /**
    * Clear the cache of this thumbnaill.
    */
-	public void clearThumbnail(){
-		this.thumbnail = null;
-	}
+  public void clearThumbnail(){
+    this.thumbnail = null;
+  }
 
   /**
    * Cache the thumbnail for this region image to disk in the path.
    *
    * @throws IOException if something goes wrong writing to disk
    */
-	public void cacheToDisk(String path) throws IOException {
+  public void cacheToDisk(String path) throws IOException {
 
-		// find next free file name
-		int i = 0;
-		File file = null;
-		String leadingZeros = "00000000";
-        // fixme: this bit could use File.createTempFile()
-        do{
-			String fileName = "" + i++;
-			fileName = leadingZeros.substring(Math.min(fileName.length(), leadingZeros.length()-1))
-			           + fileName + "." + Constants.CACHED_IMAGE_TYPE;
-			
-			file = new File(path + File.separator + fileName);
-		}
-		while (file.exists());
-		
+    // find next free file name
+    int i = 0;
+    File file = null;
+    String leadingZeros = "00000000";
+    // fixme: this bit could use File.createTempFile()
+    do{
+      String fileName = "" + i++;
+      fileName = leadingZeros.substring(Math.min(fileName.length(), leadingZeros.length()-1))
+                 + fileName + "." + Constants.CACHED_IMAGE_TYPE;
+      
+      file = new File(path + File.separator + fileName);
+    }
+    while (file.exists());
+    
 
-		// save image
-		ImageIO.write(this.toThumbnail(path, Constants.FACE_THUMBNAIL_SIZE.width,
-				                       Constants.FACE_THUMBNAIL_SIZE.height),
-				                       Constants.CACHED_IMAGE_TYPE, file);
-		// remember file
-		this.cachedFile = file.getName();		
-	}
+    // save image
+    ImageIO.write(this.toThumbnail(path, Constants.FACE_THUMBNAIL_SIZE.width,
+                               Constants.FACE_THUMBNAIL_SIZE.height),
+                               Constants.CACHED_IMAGE_TYPE, file);
+    // remember file
+    this.cachedFile = file.getName();    
+  }
+
+  public String cache(String path) {
+    this.updateCache(path);
+    return this.cachedFile;
+  }
 
   /**
    * Clears the cache of this region thumbnail from memory so that the next time it is requested it will need to be
@@ -162,128 +167,128 @@ public class Region implements Serializable{
    * thumbnail that may exist there already.
    */
   private void updateCache(String path){
-		if (cachedFile != null){
-			deleteCachedFile(path);
-			try {
-				this.cacheToDisk(path);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		this.thumbnail = null;
-	}
+    if (cachedFile != null){
+      deleteCachedFile(path);
+    }
+    try {
+      this.cacheToDisk(path);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    this.thumbnail = null;
+  }
 
   /**
    * Deletes the cached thumbnail file for this region from disk.
    */
   public void deleteCachedFile(String path){
-		if (cachedFile!=null){
-			File file = new File(path + File.separator + cachedFile);
-			file.delete();
-			cachedFile = null;
-		}
-	}
-	
-	//-------------------- Setter and Getter --------------//
+    if (cachedFile!=null){
+      File file = new File(path + File.separator + cachedFile);
+      file.delete();
+      cachedFile = null;
+    }
+  }
+  
+  //-------------------- Setter and Getter --------------//
 
-	public String getImage() {
-		return this.image;
-	}
-	
-	public int getHeight() {
-		return height;
-	}
+  public String getImage() {
+    return this.image;
+  }
+  
+  public int getHeight() {
+    return height;
+  }
 
-	public void setHeight(int height, String path) {
-		this.height = height;
-		this.updateCache(path);
-	}
+  public void setHeight(int height, String path) {
+    this.height = height;
+    this.updateCache(path);
+  }
 
-	public int getWidth() {
-		return width;
-	}
+  public int getWidth() {
+    return width;
+  }
 
-	public void setWidth(int width, String path) {
-		this.width = width;
-		this.updateCache(path);
-	}
+  public void setWidth(int width, String path) {
+    this.width = width;
+    this.updateCache(path);
+  }
 
-	public int getX() {
-		return x;
-	}
+  public int getX() {
+    return x;
+  }
 
-	public void setX(int x, String path) {
-		this.x = x;
-		this.updateCache(path);
-	}
-	
-	public void setPosition(Point p, String path){
-		this.x = p.x;
-		this.y = p.y;
-		this.updateCache(path);
-	}
+  public void setX(int x, String path) {
+    this.x = x;
+    this.updateCache(path);
+  }
+  
+  public void setPosition(Point p, String path){
+    this.x = p.x;
+    this.y = p.y;
+    this.updateCache(path);
+  }
 
-	public int getY() {
-		return y;
-	}
+  public int getY() {
+    return y;
+  }
 
-	public void setY(int y, String path) {
-		this.y = y;
-		this.updateCache(path);
-	}
-	
-	public String getCachedFile() {
-		return cachedFile;
-	}
+  public void setY(int y, String path) {
+    this.y = y;
+    this.updateCache(path);
+  }
+  
+  public String getCachedFile() {
+    return cachedFile;
+  }
 
-	public void setCachedFile(String cachedFile) {
-		this.cachedFile = cachedFile;
-	}
+  public void setCachedFile(String cachedFile) {
+    this.cachedFile = cachedFile;
+  }
 
 
-	public boolean isUsedForTraining() {
-		return usedForTraining;
-	}
-	
-	/**
-	 * Checks if a given point on the image lays inside of the region. Currently
+  public boolean isUsedForTraining() {
+    return usedForTraining;
+  }
+  
+  /**
+   * Checks if a given point on the image lays inside of the region. Currently
    * not used.
    *
-	 * @param point
-	 * @return
-	 */
-	public boolean containsPoint(Point point){
-		
-		// set point relative to center of region
-		int x = getX() - point.x;
-		int y = getY() - point.y;
-		
-		// rotate point to region coords
-		double angle = Math.toRadians(getAngle());
-		double finalX = x * Math.cos(angle) + y * -Math.sin(angle);
-		double finalY = x * Math.sin(angle) + y * Math.cos(angle);
-		
-		if (Math.abs(finalX) < getWidth()/2 && Math.abs(finalY) < getHeight()/2)			
-			return true;
-		
-		return false;
-	}
+   * @param point
+   * @return
+   */
+  public boolean containsPoint(Point point){
+    
+    // set point relative to center of region
+    int x = getX() - point.x;
+    int y = getY() - point.y;
+    
+    // rotate point to region coords
+    double angle = Math.toRadians(getAngle());
+    double finalX = x * Math.cos(angle) + y * -Math.sin(angle);
+    double finalY = x * Math.sin(angle) + y * Math.cos(angle);
+    
+    if (Math.abs(finalX) < getWidth()/2 && Math.abs(finalY) < getHeight()/2)      
+      return true;
+    
+    return false;
+  }
 
-	public void setUsedForTraining(boolean usedForTraining) {
-		this.usedForTraining = usedForTraining;
-	}
+  public void setUsedForTraining(boolean usedForTraining) {
+    this.usedForTraining = usedForTraining;
+  }
 
-	/**
-	 * @return
-	 */
-	public double getAngle() {
-		return this.angle;
-	}
+  /**
+   * @return
+   */
+  public double getAngle() {
+    return this.angle;
+  }
 
-	/**
-	 * @param newAngle
-	 */
-	public void setAngle(double newAngle) {
-		this.angle = newAngle;		
-	}
+  /**
+   * @param newAngle
+   */
+  public void setAngle(double newAngle) {
+    this.angle = newAngle;    
+  }
 }

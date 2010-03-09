@@ -9,7 +9,6 @@ javac -Xlint:unchecked -d ../bin/ -cp . \
  faint/FaceDatabase.java \
  faint/Region.java \
  faint/CovarianceMatrix.java \
- faint/ImageModel.java \
  faint/Utilities.java 
 cd ..
 cd jni
